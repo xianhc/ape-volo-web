@@ -166,7 +166,7 @@ import pagination from '@crud/Pagination'
 import DateRangePicker from '@/components/DateRangePicker'
 
 const defaultForm = {
-  id: null,
+  id: 0,
   email: null,
   displayName: null,
   host: null,

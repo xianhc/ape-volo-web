@@ -27,7 +27,7 @@ export function edit(data) {
 export function getAllEmailAccounts() {
   const params = {
     pageIndex: 1,
-    pageSize: 9999
+    pageSize: 100
   }
   return request({
     url: 'api/email/account/query',

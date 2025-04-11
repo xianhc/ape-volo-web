@@ -273,7 +273,7 @@ import '@riophae/vue-treeselect/dist/vue-treeselect.css'
 import DateRangePicker from '@/components/DateRangePicker'
 
 const defaultForm = {
-  id: null,
+  id: 0,
   name: null,
   permission: null,
   depts: [],

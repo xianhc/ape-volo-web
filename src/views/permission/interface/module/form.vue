@@ -77,7 +77,7 @@
 import { form } from '@crud/crud'
 
 const defaultForm = {
-  id: null,
+  id: 0,
   group: '',
   description: '',
   url: '',

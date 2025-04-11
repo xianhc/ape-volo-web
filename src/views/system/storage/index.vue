@@ -124,7 +124,7 @@ import pagination from '@crud/Pagination'
 import udOperation from '@crud/UD.operation'
 import DateRangePicker from '@/components/DateRangePicker'
 
-const defaultForm = { id: null, description: '' }
+const defaultForm = { id: 0, description: '' }
 export default {
   components: { pagination, crudOperation, rrOperation, DateRangePicker, udOperation },
   cruds() {

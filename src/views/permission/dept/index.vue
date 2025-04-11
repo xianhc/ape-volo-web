@@ -5,7 +5,7 @@
       <div v-if="crud.props.searchToggle">
         <!-- 搜索 -->
         <el-input
-          v-model="query.deptName"
+          v-model="query.name"
           clearable
           size="small"
           placeholder="输入部门名称搜索"
@@ -23,12 +23,7 @@
           style="width: 90px"
           @change="crud.toQuery"
         >
-          <el-option
-            v-for="item in enabledTypeOptions"
-            :key="item.key"
-            :label="item.display_name"
-            :value="item.key"
-          />
+          <el-option v-for="item in dict.dict.dept_status" :key="item.value" :label="item.label" :value="item.value" />
         </el-select>
         <rrOperation />
       </div>
@@ -75,7 +70,8 @@
             :key="item.id"
             v-model="form.enabled"
             :label="item.value === 'true'"
-          >{{ item.label }}</el-radio>
+          >{{ item.label }}
+          </el-radio>
         </el-form-item>
         <el-form-item
           v-if="form.isTop === '0'"
@@ -98,7 +94,8 @@
           :loading="crud.status.cu === 2"
           type="primary"
           @click="crud.submitCU"
-        >确认</el-button>
+        >确认
+        </el-button>
       </div>
     </el-dialog>
     <!--表格渲染-->
@@ -161,11 +158,11 @@ import udOperation from '@crud/UD.operation'
 import DateRangePicker from '@/components/DateRangePicker'
 
 const defaultForm = {
-  id: null,
+  id: 0,
   name: null,
   isTop: '1',
   subCount: 0,
-  parentId: '0',
+  parentId: 0,
   sort: 999,
   enabled: true
 }
@@ -208,11 +205,7 @@ export default {
         edit: ['dept_edit'],
         del: ['dept_del'],
         down: ['dept_down']
-      },
-      enabledTypeOptions: [
-        { key: 'true', display_name: '正常' },
-        { key: 'false', display_name: '禁用' }
-      ]
+      }
     }
   },
   methods: {
@@ -226,14 +219,12 @@ export default {
     },
     // 新增与编辑前做的操作
     [CRUD.HOOK.afterToCU](crud, form) {
-      if (form.parentId !== '0') {
-        form.isTop = '0'
-      } else if (form.id !== null) {
-        form.isTop = '1'
-        form.parentId = null
+      this.$set(this.form, 'isTop', '1')
+      if (form.parentId !== 0) {
+        this.$set(this.form, 'isTop', '0')
       }
-      // form.enabled = `${form.enabled}`
-      if (form.id != null) {
+
+      if (form.id !== 0) {
         this.getSupDepts(form.id)
       } else {
         this.getDepts()
@@ -284,7 +275,7 @@ export default {
     },
     // 提交前的验证
     [CRUD.HOOK.afterValidateCU]() {
-      if (this.form.parentId !== '0' && this.form.parentId === this.form.id) {
+      if (this.form.parentId !== 0 && this.form.parentId === this.form.id) {
         this.$message({
           message: '上级部门不能为空',
           type: 'warning'
@@ -292,7 +283,7 @@ export default {
         return false
       }
       if (this.form.isTop === '1') {
-        this.form.parentId = '0'
+        this.form.parentId = 0
       }
       return true
     },
@@ -300,10 +291,10 @@ export default {
     changeEnabled(data, val) {
       this.$confirm(
         '此操作将 "' +
-          this.dict.label.dept_status[val] +
-          '" ' +
-          data.name +
-          '部门, 是否继续？',
+        this.dict.label.dept_status[val] +
+        '" ' +
+        data.name +
+        '部门, 是否继续？',
         '提示',
         {
           confirmButtonText: '确定',

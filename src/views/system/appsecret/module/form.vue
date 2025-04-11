@@ -80,7 +80,7 @@
 import { form } from '@crud/crud'
 
 const defaultForm = {
-  id: null,
+  id: 0,
   appId: '',
   appSecretKey: '',
   appName: '',

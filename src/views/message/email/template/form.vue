@@ -75,7 +75,7 @@ import { getAllEmailAccounts } from '@/api/message/emailAccount'
 import CRUD from '../../../../components/Crud/crud'
 
 const defaultForm = {
-  id: null,
+  id: 0,
   name: null,
   bccEmailAddresses: null,
   subject: null,

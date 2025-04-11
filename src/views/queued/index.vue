@@ -101,7 +101,8 @@
     </el-table>
     <!--分页组件-->
     <pagination />
-    <!--Form表单--> <eForm />
+    <!--Form表单-->
+    <eForm />
   </div>
 </template>
 

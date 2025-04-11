@@ -115,7 +115,7 @@
 import CRUD, { form } from '@crud/crud'
 
 const defaultForm = {
-  id: null,
+  id: 0,
   tenantId: null,
   name: '',
   description: '',
@@ -152,7 +152,7 @@ export default {
       return this.form.tenantType === 1
     },
     isTenantIdDisabled() {
-      return this.form.id !== null
+      return this.form.id !== 0
     }
   },
   methods: {

@@ -333,7 +333,7 @@ import Avatar from '@/assets/images/avatar.png'
 let userRoles = []
 let userJobs = []
 const defaultForm = {
-  id: null,
+  id: 0,
   username: null,
   nickName: null,
   gender: '男',
@@ -460,7 +460,7 @@ export default {
     // 新增与编辑前做的操作
     [CRUD.HOOK.afterToCU](crud, form) {
       this.getRoles()
-      if (form.id == null) {
+      if (form.id === 0) {
         this.getDepts()
       } else {
         this.getSupDepts(form.dept.id)
@@ -558,7 +558,7 @@ export default {
     },
     getSupDepts(deptId) {
       getDeptSuperior(deptId).then((res) => {
-        const date = res.content
+        const date = res
         this.buildDepts(date)
         this.depts = date
       })
@@ -643,7 +643,7 @@ export default {
     getJobs() {
       getAllJob()
         .then((res) => {
-          this.jobs = res.content
+          this.jobs = res
         })
         .catch(() => {
         })
@@ -660,7 +660,7 @@ export default {
     getTenants() {
       getAllTenant()
         .then((res) => {
-          this.tenants = res.content
+          this.tenants = res
         })
         .catch(() => {
         })

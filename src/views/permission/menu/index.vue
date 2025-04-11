@@ -296,7 +296,7 @@ import DateRangePicker from '@/components/DateRangePicker'
 
 // crud交由presenter持有
 const defaultForm = {
-  id: null,
+  id: 0,
   title: null,
   sort: 999,
   path: null,
@@ -349,7 +349,7 @@ export default {
     // 新增与编辑前做的操作
     [CRUD.HOOK.afterToCU](crud, form) {
       this.menus = []
-      if (form.id != null) {
+      if (form.id !== 0) {
         // if (form.parentId === null) {
         //   form.parentId = 0
         // }

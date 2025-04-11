@@ -83,6 +83,8 @@
           </template>
         </el-table-column>
       </el-table>
+      <!--分页组件-->
+      <pagination />
     </div>
   </div>
 </template>
@@ -92,11 +94,12 @@ import crudDictDetail from '@/api/system/dictDetail'
 import CRUD, { presenter, header, form } from '@crud/crud'
 import rrOperation from '@crud/RR.operation'
 import udOperation from '@crud/UD.operation'
+import pagination from '@crud/Pagination.vue'
 
-const defaultForm = { id: null, label: null, value: null, dictSort: 999 }
+const defaultForm = { id: 0, label: null, value: null, dictSort: 999 }
 
 export default {
-  components: { rrOperation, udOperation },
+  components: { pagination, rrOperation, udOperation },
   cruds() {
     return [
       CRUD({
@@ -141,7 +144,7 @@ export default {
   },
   methods: {
     disabledEdit(row) {
-      return row.id === '1306054134645919764' || row.id === '1306054134645919765'
+      return row.id === 163519427764326 || row.id === 163519427764327
     }
   }
 }

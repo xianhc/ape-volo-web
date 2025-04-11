@@ -112,7 +112,7 @@
               fixed="right"
             >
               <template slot-scope="scope">
-                <udOperation :data="scope.row" :permission="permission" :disabled-edit="scope.row.id === '1306054134645919763'" :disabled-dle="scope.row.id === '1306054134645919763'" />
+                <udOperation :data="scope.row" :permission="permission" :disabled-edit="scope.row.id === 163519427764325" :disabled-dle="scope.row.id === 163519427764325" />
               </template>
             </el-table-column>
           </el-table>
@@ -158,7 +158,7 @@ import udOperation from '@crud/UD.operation'
 import DateRangePicker from '@/components/DateRangePicker/index.vue'
 
 const defaultForm = {
-  id: null,
+  id: 0,
   dictType: null,
   name: null,
   description: null,
@@ -194,6 +194,7 @@ export default {
       ],
       rules: {
         name: [{ required: true, message: '请输入名称', trigger: 'blur' }],
+        description: [{ required: true, message: '请输入字典描述', trigger: 'blur' }],
         dictType: [{ required: true, message: '请选择字典类型', trigger: 'blur' }]
       },
       permission: {
@@ -235,7 +236,7 @@ export default {
       }
     },
     checkboxT(row, rowIndex) {
-      return row.id !== '1306054134645919763'
+      return row.id !== 163519427764325
     }
   }
 }
