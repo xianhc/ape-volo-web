@@ -1,82 +1,107 @@
 <template>
-  <div class="app-container">
-    <!--工具栏-->
-    <div class="head-container">
-      <eHeader :permission="permission" />
-      <crudOperation :permission="permission" />
+  <div>
+    <div v-if="searchToggle" class="ape-volo-search">
+      <el-form :inline="true" :model="searchInfo">
+        <el-form-item label="应用Id">
+          <el-input
+            oninput="value=value.replace(/[^0-9]/g,'')"
+            v-model="searchInfo.appId"
+            placeholder="请输入"
+          />
+        </el-form-item>
+        <el-form-item label="应用名称">
+          <el-input v-model="searchInfo.appName" placeholder="请输入" />
+        </el-form-item>
+        <el-form-item label="备注">
+          <el-input v-model="searchInfo.remark" placeholder="请输入" />
+        </el-form-item>
+        <DateRangePicker v-model="searchInfo" />
+        <SearchOpts />
+      </el-form>
     </div>
-    <!--表格渲染-->
-    <el-table
-      ref="table"
-      v-loading="crud.loading"
-      :data="crud.data"
-      style="width: 100%"
-      @selection-change="crud.selectionChangeHandler"
-    >
-      <el-table-column type="selection" width="55" />
-      <el-table-column prop="appId" label="应用ID" />
-      <el-table-column prop="appName" label="应用名称" />
-      <el-table-column prop="appSecretKey" label="应用密钥" />
-      <el-table-column prop="remark" label="备注" />
-      <el-table-column prop="createBy" label="创建人" />
-      <el-table-column prop="createTime" label="创建时间" />
-      <el-table-column prop="updateBy" label="更新人" />
-      <el-table-column prop="updateTime" label="更新时间" />
-      <!--   编辑与删除   -->
-      <el-table-column
-        v-if="checkPer(['appSecret_edit', 'appSecret_del'])"
-        label="操作"
-        width="130px"
-        align="center"
-        fixed="right"
+    <div v-else class="p-1 rounded"></div>
+    <div class="ape-volo-table">
+      <CrudOpts :perms="perms" />
+      <el-table
+        ref="tableRef"
+        :data="data"
+        v-loading="loading"
+        @selection-change="onSelectionChange"
+        @sort-change="onSortChange"
+        row-key="id"
       >
-        <template slot-scope="scope">
-          <udOperation :data="scope.row" :permission="permission" />
-        </template>
-      </el-table-column>
-    </el-table>
-    <!--分页组件-->
-    <pagination />
+        <el-table-column type="selection" width="55" />
+        <el-table-column prop="appId" label="应用Id" sortable="custom" />
+        <el-table-column prop="appName" label="应用名称" sortable="custom" />
+        <el-table-column
+          prop="appSecretKey"
+          label="应用密钥"
+          sortable="custom"
+        />
+        <el-table-column prop="remark" label="备注" />
+        <el-table-column prop="createTime" label="创建时间" sortable="custom" />
+        <el-table-column prop="createBy" label="创建人" sortable="custom" />
+        <el-table-column :min-width="appStore.operateMinWith" label="操作">
+          <template v-slot="scope">
+            <RowOpts :row="scope.row" :val="scope.row.name" :perms="perms" />
+          </template>
+        </el-table-column>
+      </el-table>
+      <el-pagination v-bind="pagination" />
+    </div>
     <!--表单渲染-->
-    <eForm />
+    <formPanel />
   </div>
 </template>
 
-<script>
-import crudAppSecret from '@/api/system/appSecret'
-import eHeader from './module/header'
-import eForm from './module/form'
-import CRUD, { presenter } from '@crud/crud'
-import crudOperation from '@crud/CRUD.operation'
-import pagination from '@crud/Pagination'
-import udOperation from '@crud/UD.operation'
-export default {
-  name: 'AppSecret',
-  components: { eHeader, eForm, crudOperation, pagination, udOperation },
-  cruds() {
-    return CRUD({
-      title: '应用密钥',
-      url: 'api/appSecret/query',
-      sortFields: ['update_time desc'],
-      crudMethod: { ...crudAppSecret }
-    })
-  },
-  mixins: [presenter()],
-  data() {
-    return {
-      permission: {
-        add: ['appSecret_add'],
-        edit: ['appSecret_edit'],
-        del: ['appSecret_del'],
-        down: ['appSecret_down']
-      }
-    }
-  }
-}
-</script>
+<script setup>
+  import { del, edit, get, add, download } from '@/api/system/appSecret'
+  import { ref } from 'vue'
+  import formPanel from './module/formPanel.vue'
+  import DateRangePicker from '@/components/CRUD/DateRangePicker.vue'
+  import { useCrud } from '@/components/Crud/UseCrud'
+  import CrudOpts from '@/components/CRUD/CrudOpts.vue'
+  import RowOpts from '@/components/CRUD/RowOpts.vue'
+  import SearchOpts from '@/components/CRUD/SearchOpts.vue'
+  import { useAppStore } from '@/pinia'
 
-<style rel="stylesheet/scss" lang="scss" scoped>
-::v-deep .el-input-number .el-input__inner {
-  text-align: left;
-}
-</style>
+  defineOptions({
+    name: 'AppSecret'
+  })
+
+  const perms = {
+    add: ['sys:appSecret:add'],
+    edit: ['sys:appSecret:edit'],
+    del: ['sys:appSecret:del'],
+    download: ['sys:appSecret:download']
+  }
+
+  const appStore = useAppStore()
+
+  const searchInfo = ref({})
+
+  const {
+    data,
+    searchToggle,
+    loading,
+    onSelectionChange,
+    pagination,
+    onSortChange
+  } = useCrud({
+    crudMethod: {
+      list: get,
+      del: del,
+      add: add,
+      edit: edit,
+      download: download
+    },
+    defaultForm: () => ({
+      id: 0,
+      appId: '',
+      appSecretKey: '',
+      appName: '',
+      remark: ''
+    }),
+    searchInfo
+  })
+</script>

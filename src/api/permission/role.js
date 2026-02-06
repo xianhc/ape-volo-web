@@ -1,78 +1,128 @@
 import request from '@/utils/request'
 
-export function getAllRole() {
+/**
+ * 分页查询角色列表
+ * @param {Object} params - 查询参数
+ * @returns {Promise} 返回角色列表的Promise对象
+ */
+export const get = (params) => {
   return request({
-    url: 'api/role/queryAll',
-    method: 'get'
+    url: '/role/query',
+    method: 'get',
+    params
   })
 }
 
-export function add(data) {
+/**
+ * 创建新角色
+ * @param {Object} data - 角色信息
+ * @returns {Promise} 返回创建结果的Promise对象
+ */
+export const add = (data) => {
   return request({
-    url: 'api/role/create',
+    url: '/role/create',
     method: 'post',
     data
   })
 }
 
-export function get(id) {
+/**
+ * 删除角色
+ * @param {Array<number>} ids - 要删除的角色ID数组
+ * @returns {Promise} 返回删除结果的Promise对象
+ */
+export const del = (ids) => {
   return request({
-    url: 'api/role/querySingle?id=' + id,
-    method: 'get'
-  })
-}
-
-export function getLevel() {
-  return request({
-    url: 'api/role/level',
-    method: 'get'
-  })
-}
-
-export function del(ids) {
-  return request({
-    url: 'api/role/delete',
+    url: '/role/delete',
     method: 'delete',
     data: ids
   })
 }
 
-export function edit(data) {
+/**
+ * 编辑角色信息
+ * @param {Object} data - 角色信息
+ * @returns {Promise} 返回编辑结果的Promise对象
+ */
+export const edit = (data) => {
   return request({
-    url: 'api/role/edit',
+    url: '/role/edit',
     method: 'put',
     data
   })
 }
 
-export function getMenusTree() {
+/**
+ * 导出角色数据
+ * @param {Object} params - 导出参数
+ * @returns {Promise} 返回文件流的Promise对象
+ */
+export const download = (params) => {
   return request({
-    url: 'api/permissions/menus/query',
+    url: '/role/download',
+    method: 'get',
+    responseType: 'blob',
+    params
+  })
+}
+
+/**
+ * 获取单个角色信息
+ * @param {Object} params - 查询参数
+ * @returns {Promise} 返回角色详情的Promise对象
+ */
+export const single = (params) => {
+  return request({
+    url: '/role/single',
+    method: 'get',
+    params
+  })
+}
+
+/**
+ * 编辑角色菜单权限
+ * @param {Object} data - 角色菜单权限信息
+ * @returns {Promise} 返回编辑结果的Promise对象
+ */
+export const editRoleMenu = (data) => {
+  return request({
+    url: '/role/editMenu',
+    method: 'put',
+    data
+  })
+}
+
+/**
+ * 编辑角色API权限
+ * @param {Object} data - 角色API权限信息
+ * @returns {Promise} 返回编辑结果的Promise对象
+ */
+export const editRoleApi = (data) => {
+  return request({
+    url: '/role/editApi',
+    method: 'put',
+    data
+  })
+}
+
+/**
+ * 获取所有角色列表（不分页）
+ * @returns {Promise} 返回所有角色的Promise对象
+ */
+export const getAll = () => {
+  return request({
+    url: '/role/queryAll',
     method: 'get'
   })
 }
 
-export function getApisTree() {
+/**
+ * 获取角色级别信息
+ * @returns {Promise} 返回角色级别的Promise对象
+ */
+export const getLevel = () => {
   return request({
-    url: 'api/permissions/apis/query',
+    url: '/role/level',
     method: 'get'
   })
 }
-
-export function editMenu(data) {
-  return request({
-    url: 'api/permissions/menus/edit',
-    method: 'put',
-    data
-  })
-}
-
-export function editApi(data) {
-  return request({
-    url: 'api/permissions/apis/edit',
-    method: 'put',
-    data
-  })
-}
-
-export default { add, edit, del, get, editMenu, editApi, getLevel, getMenusTree, getApisTree }

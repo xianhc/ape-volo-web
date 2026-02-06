@@ -1,169 +1,192 @@
 <template>
-  <div class="app-container">
-    <!--工具栏-->
-    <div class="head-container">
-      <eHeader :dict="dict" :permission="permission" />
-      <crudOperation :permission="permission" />
+  <div>
+    <div v-if="searchToggle" class="ape-volo-search">
+      <el-form :inline="true" :model="searchInfo">
+        <el-form-item label="邮箱">
+          <el-input v-model="searchInfo.email" placeholder="请输入" />
+        </el-form-item>
+        <el-form-item label="显示名称">
+          <el-input v-model="searchInfo.displayName" placeholder="请输入" />
+        </el-form-item>
+        <el-form-item label="状态">
+          <el-select
+            v-model="searchInfo.enabled"
+            clearable
+            placeholder="请选择"
+          >
+            <el-option
+              v-for="item in statusTypeOption"
+              :key="item.value"
+              :label="item.label"
+              :value="item.value"
+            />
+          </el-select>
+        </el-form-item>
+        <DateRangePicker v-model="searchInfo" />
+        <SearchOpts />
+      </el-form>
     </div>
-    <!--表格渲染-->
-    <el-table
-      ref="table"
-      v-loading="crud.loading"
-      :data="crud.data"
-      style="width: 100%"
-      @selection-change="crud.selectionChangeHandler"
-    >
-      <el-table-column :selectable="checkboxT" type="selection" width="55" />
-      <el-table-column :show-overflow-tooltip="true" prop="id" label="模板ID" />
-      <el-table-column
-        :show-overflow-tooltip="true"
-        prop="name"
-        width="150px"
-        label="模板名称"
-      />
-      <el-table-column
-        :show-overflow-tooltip="true"
-        prop="subject"
-        width="150px"
-        label="主题"
-      />
-      <el-table-column
-        :show-overflow-tooltip="true"
-        prop="body"
-        label="内容"
-      />
-      <el-table-column
-        :show-overflow-tooltip="true"
-        prop="bccEmailAddresses"
-        label="抄送邮箱"
-      />
-      <el-table-column
-        :show-overflow-tooltip="true"
-        prop="emailAccountId"
-        label="发送邮箱"
-      />
-      <el-table-column prop="isActive" label="状态" align="center">
-        <template slot-scope="scope">
-          <el-switch
-            v-model="scope.row.isActive"
-            active-color="#409EFF"
-            inactive-color="#F56C6C"
-            @change="changeEnabled(scope.row, scope.row.isActive)"
-          />
-        </template>
-      </el-table-column>
-      <el-table-column
-        :show-overflow-tooltip="true"
-        prop="createTime"
-        width="136px"
-        label="创建时间"
-      />
-      <el-table-column
-        :show-overflow-tooltip="true"
-        prop="updateTime"
-        width="136px"
-        label="更新时间"
-      />
-      <!--   编辑与删除   -->
-      <el-table-column
-        v-if="checkPer(['emailTemplate_edit', 'emailTemplate_del'])"
-        label="操作"
-        width="130px"
-        align="center"
-        fixed="right"
+    <div class="ape-volo-table">
+      <CrudOpts :perms="perms" />
+      <el-table
+        ref="tableRef"
+        :data="data"
+        v-loading="loading"
+        @selection-change="onSelectionChange"
+        @sort-change="onSortChange"
+        row-key="id"
       >
-        <template slot-scope="scope">
-          <udOperation :data="scope.row" :permission="permission" />
-        </template>
-      </el-table-column>
-    </el-table>
-    <!--分页组件-->
-    <pagination />
-    <!--Form表单--> <eForm :template-status="dict.email_message_template_status" />
+        <el-table-column type="selection" width="55" />
+        <el-table-column prop="id" label="模板Id" sortable="custom" />
+        <el-table-column prop="name" label="模板名称" sortable="custom" />
+        <el-table-column prop="subject" label="邮件主题" sortable="custom" />
+        <el-table-column
+          prop="emailAccountId"
+          label="发送邮箱"
+          sortable="custom"
+        >
+          <template #default="scope">
+            <el-select
+              style="width: 200px"
+              v-model="scope.row.emailAccountId"
+              value-key="id"
+            >
+              <el-option
+                v-for="item in emailAccountOption"
+                :key="item.id"
+                :label="item.displayName"
+                :value="item.id"
+              />
+            </el-select>
+          </template>
+        </el-table-column>
+        <el-table-column
+          prop="bccEmailAddresses"
+          :show-overflow-tooltip="true"
+          min-width="200"
+          label="抄送邮箱"
+          sortable="custom"
+        />
+        <el-table-column prop="userName" label="状态" sortable="custom">
+          <template v-slot="scope">
+            <el-switch
+              v-model="scope.row.enabled"
+              inline-prompt
+              :loading="loadingMap[scope.row.id]"
+              :active-text="showDictLabel(statusTypeOption, 'true')"
+              :inactive-text="showDictLabel(statusTypeOption, 'false')"
+              @change="changeEnabled(scope.row, scope.row.enabled)"
+            />
+          </template>
+        </el-table-column>
+        <el-table-column prop="createTime" label="创建时间" sortable="custom" />
+        <el-table-column :min-width="appStore.operateMinWith" label="操作">
+          <template v-slot="scope">
+            <RowOpts :row="scope.row" :val="scope.row.name" :perms="perms" />
+          </template>
+        </el-table-column>
+      </el-table>
+      <el-pagination v-bind="pagination" />
+    </div>
+    <!--表单渲染-->
+    <formPanel
+      :email-account-option="emailAccountOption"
+      :status-type-option="statusTypeOption"
+    />
   </div>
 </template>
 
-<script>
-import crudEmailTemplate from '@/api/message/emailTemplate'
-import eHeader from './header'
-import eForm from './form'
-import CRUD, { presenter } from '@crud/crud'
-import crudOperation from '@crud/CRUD.operation'
-import udOperation from '@crud/UD.operation'
-import pagination from '@crud/Pagination'
+<script setup>
+  import { getAll } from '@/api/message/email/emailAccount'
+  import { del, edit, get, add } from '@/api/message/email/emailTemplate'
+  import { reactive, ref } from 'vue'
+  import formPanel from './module/formPanel.vue'
+  import DateRangePicker from '@/components/CRUD/DateRangePicker.vue'
+  import { useCrud } from '@/components/Crud/UseCrud'
+  import CrudOpts from '@/components/CRUD/CrudOpts.vue'
+  import RowOpts from '@/components/CRUD/RowOpts.vue'
+  import SearchOpts from '@/components/CRUD/SearchOpts.vue'
+  import { useAppStore } from '@/pinia'
+  import { getDict, showDictLabel } from '@/utils/dictionary'
+  import { ElMessage, ElMessageBox } from 'element-plus'
 
-export default {
-  name: 'EmailTemplate',
-  components: {
-    eHeader,
-    eForm,
-    pagination,
-    crudOperation,
-    udOperation
-  },
-  cruds: function() {
-    return CRUD({
-      title: '电子邮件模板',
-      url: 'api/email/template/query',
-      crudMethod: { ...crudEmailTemplate },
-      optShow: {
-        add: true,
-        edit: true,
-        del: true,
-        download: false,
-        reset: true
-      }
-    })
-  },
-  mixins: [presenter()],
-  // 数据字典
-  dicts: ['email_message_template_status'],
-  data() {
-    return {
-      permission: {
-        add: ['emailTemplate_add'],
-        edit: ['emailTemplate_edit'],
-        del: ['emailTemplate_del']
-      }
-    }
-  },
-  methods: {
-    checkboxT: function(row, rowIndex) {
-      return row.id !== 1
-    },
-    changeEnabled(data, val) {
-      this.$confirm(
-        '此操作将 "' +
-        this.dict.label.email_message_template_status[val] +
-        '" ' +
-        data.name +
-        '邮件模板, 是否继续？',
-        '提示',
-        {
-          confirmButtonText: '确定',
-          cancelButtonText: '取消',
-          type: 'warning'
-        }
-      )
-        .then(() => {
-          crudEmailTemplate
-            .edit(data)
-            .then(() => {
-              // eslint-disable-next-line no-undef
-              this.crud.message(
-                this.dict.label.email_message_template_status[val] + '成功',
-                'success'
-              )
-            })
-            .catch((err) => {
-              data.isActive = !data.isActive
-              console.log(err.data.message)
-            })
-        })
-        .catch(() => {
-          data.isActive = !data.isActive
-        })
-    }
+  defineOptions({
+    name: 'EmailTemplate'
+  })
+
+  const perms = {
+    add: ['sys:emailTemplate:add'],
+    edit: ['sys:emailTemplate:edit'],
+    del: ['sys:emailTemplate:del'],
+    download: ['sys:emailTemplate:download']
   }
-}
+
+  const appStore = useAppStore()
+
+  const searchInfo = ref({
+    email: null,
+    displayName: null,
+    enabled: null
+  })
+
+  // 状态
+  const statusTypeOption = ref([])
+  const emailAccountOption = ref([])
+
+  const {
+    data,
+    searchToggle,
+    loading,
+    onSelectionChange,
+    pagination,
+    onSortChange
+  } = useCrud({
+    crudMethod: { list: get, del: del, add: add, edit: edit },
+    defaultForm: () => ({
+      id: 0,
+      name: null,
+      bccEmailAddresses: null,
+      subject: null,
+      body: '',
+      enabled: true,
+      emailAccountId: null
+    }),
+    searchInfo
+  })
+
+  const init = async () => {
+    statusTypeOption.value = await getDict('status_type')
+
+    const res = await getAll()
+    emailAccountOption.value = res.data
+  }
+
+  init()
+
+  const loadingMap = reactive({})
+  const changeEnabled = async (row, val) => {
+    loadingMap[row.id] = true
+    ElMessageBox.confirm(
+      `你要将${row.name}的状态切换为【${val ? '启用' : '禁用'}】吗？`,
+      '切换状态',
+      {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }
+    )
+      .then(async () => {
+        await edit(row).then(() => {
+          ElMessage({
+            type: 'success',
+            message: '修改成功'
+          })
+        })
+        loadingMap[row.id] = false
+      })
+      .catch(() => {
+        row.enabled = !row.enabled
+        loadingMap[row.id] = false
+      })
+  }
 </script>

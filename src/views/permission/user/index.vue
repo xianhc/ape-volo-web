@@ -1,692 +1,452 @@
 <template>
-  <div class="app-container">
-    <el-row :gutter="20">
-      <!--侧边部门数据-->
-      <el-col :xs="9" :sm="6" :md="5" :lg="4" :xl="4">
-        <div class="head-container">
-          <el-input
-            v-model="deptName"
+  <div>
+    <div v-if="searchToggle" class="ape-volo-search">
+      <el-form :inline="true" :model="searchInfo">
+        <el-form-item label="部门">
+          <el-cascader
+            v-model="searchInfo.departmentIdArray"
+            style="width: 250px"
+            :options="departmentOption"
+            :props="{
+              checkStrictly: true,
+              multiple: true,
+              //collapse : false,
+              label: 'name',
+              value: 'id',
+              emitPath: false
+            }"
+            :show-all-levels="false"
+            filterable
             clearable
-            size="small"
-            placeholder="输入部门名称搜索"
-            prefix-icon="el-icon-search"
-            class="filter-item"
-            @input="getDeptDatas"
+            collapse-tags
+            collapse-tags-tooltip
           />
-        </div>
-        <el-tree
-          :data="deptDatas"
-          :load="getDeptDatas"
-          :props="defaultProps"
-          :expand-on-click-node="false"
-          lazy
-          @node-click="handleNodeClick"
-        />
-      </el-col>
-      <!--用户数据-->
-      <el-col :xs="15" :sm="18" :md="19" :lg="20" :xl="20">
-        <!--工具栏-->
-        <div class="head-container">
-          <div v-if="crud.props.searchToggle">
-            <!-- 搜索 -->
-            <el-input
-              v-model="query.keyWords"
-              clearable
-              size="small"
-              placeholder="输入名称或者邮箱搜索"
-              style="width: 200px"
-              class="filter-item"
-              @keyup.enter.native="crud.toQuery"
+        </el-form-item>
+        <el-form-item label="用户名">
+          <el-input
+            v-model="searchInfo.userName"
+            placeholder="请输入"
+            clearable
+          />
+        </el-form-item>
+        <el-form-item label="昵称">
+          <el-input v-model="searchInfo.nickName" placeholder="请输入" />
+        </el-form-item>
+        <el-form-item label="状态">
+          <el-select
+            v-model="searchInfo.enabled"
+            clearable
+            placeholder="请选择"
+          >
+            <el-option
+              v-for="item in statusTypeOption"
+              :key="item.value"
+              :label="item.label"
+              :value="item.value"
             />
-            <date-range-picker v-model="query.createTime" class="date-item" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="租户">
+          <el-select
+            v-model="searchInfo.tenantId"
+            clearable
+            placeholder="请选择"
+          >
+            <el-option
+              v-for="item in allTenantData"
+              :key="item.tenantId"
+              :label="item.name"
+              :value="item.tenantId"
+            />
+          </el-select>
+        </el-form-item>
+        <DateRangePicker v-model="searchInfo" />
+        <SearchOpts />
+      </el-form>
+    </div>
+    <div v-else class="p-1 rounded"></div>
+    <div class="ape-volo-table">
+      <CrudOpts :perms="perms" />
+      <el-table
+        ref="tableRef"
+        :data="data"
+        v-loading="loading"
+        @selection-change="onSelectionChange"
+        @sort-change="onSortChange"
+        style="width: 100%"
+        row-key="id"
+      >
+        <el-table-column
+          align="left"
+          type="selection"
+          :selectable="checkboxT"
+          width="55"
+        />
+        <el-table-column
+          align="left"
+          min-width="40"
+          prop="userName"
+          sortable="custom"
+          label="用户名"
+        />
+        <el-table-column
+          align="left"
+          min-width="60"
+          prop="nickName"
+          sortable="custom"
+          label="用户昵称"
+        />
+        <el-table-column
+          align="left"
+          min-width="60"
+          prop="email"
+          sortable="custom"
+          label="邮箱"
+        />
+        <el-table-column
+          align="left"
+          min-width="50"
+          prop="phone"
+          sortable="custom"
+          label="电话"
+        />
+        <el-table-column
+          align="left"
+          min-width="20"
+          prop="genderCode"
+          :formatter="
+            (row, column, cellValue) => showDictLabel(genderOption, cellValue)
+          "
+          label="性别"
+        />
+
+        <el-table-column align="left" min-width="50" prop="method" label="部门">
+          <template #default="scope">
+            {{ scope.row.dept.name }}
+          </template>
+        </el-table-column>
+        <el-table-column align="left" min-width="60" prop="roles" label="角色">
+          <template #default="scope">
             <el-select
-              v-model="query.enabled"
-              clearable
-              size="small"
-              placeholder="状态"
-              class="filter-item"
-              style="width: 90px"
-              @change="crud.toQuery"
+              v-model="scope.row.roles"
+              @visible-change="
+                (flag) => {
+                  visibleChangeRole(scope.row, flag)
+                }
+              "
+              @remove-tag="(removed) => deleteRole(scope.row, removed)"
+              value-key="id"
+              multiple
+              collapse-tags
+              collapse-tags-tooltip
+              placeholder="请选择"
             >
               <el-option
-                v-for="item in dict.user_status"
-                :key="item.value"
-                :label="item.label"
-                :value="item.value"
+                v-for="item in allRoleData"
+                :key="item.id"
+                :disabled="
+                  roleLevel.value !== 1 && item.level <= roleLevel.value
+                "
+                :label="item.name"
+                :value="item"
               />
             </el-select>
-            <rrOperation />
-          </div>
-          <crudOperation show="" :permission="permission" />
-        </div>
-        <!--表单渲染-->
-        <el-dialog
-          append-to-body
-          :close-on-click-modal="false"
-          :before-close="crud.cancelCU"
-          :visible.sync="crud.status.cu > 0"
-          :title="crud.status.title"
-          width="570px"
+          </template>
+        </el-table-column>
+        <el-table-column align="left" min-width="60" prop="jobs" label="岗位">
+          <template #default="scope">
+            <el-select
+              v-model="scope.row.jobs"
+              @visible-change="
+                (flag) => {
+                  visibleChangeJob(scope.row, flag)
+                }
+              "
+              @remove-tag="(removed) => deleteJob(scope.row, removed)"
+              value-key="id"
+              multiple
+              collapse-tags
+              collapse-tags-tooltip
+              placeholder="请选择"
+            >
+              <el-option
+                v-for="item in allJobData"
+                :key="item.id"
+                :label="item.name"
+                :value="item"
+              />
+            </el-select>
+          </template>
+        </el-table-column>
+        <el-table-column
+          align="left"
+          min-width="30"
+          prop="enabled"
+          label="状态"
         >
-          <el-form
-            ref="form"
-            :inline="true"
-            :model="form"
-            :rules="rules"
-            size="small"
-            label-width="66px"
-          >
-            <el-form-item label="用户名" prop="username">
-              <el-input v-model="form.username" />
-            </el-form-item>
-            <el-form-item label="电话" prop="phone">
-              <el-input v-model.number="form.phone" />
-            </el-form-item>
-            <el-form-item label="昵称" prop="nickName">
-              <el-input v-model="form.nickName" />
-            </el-form-item>
-            <el-form-item label="邮箱" prop="email">
-              <el-input v-model="form.email" />
-            </el-form-item>
-            <el-form-item label="部门" prop="dept.id">
-              <treeselect
-                v-model="form.dept.id"
-                :options="depts"
-                :load-options="loadDepts"
-                style="width: 178px"
-                placeholder="选择部门"
-              />
-            </el-form-item>
-            <el-form-item label="岗位" prop="jobs">
-              <el-select
-                v-model="jobDatas"
-                value-key="id"
-                style="width: 178px"
-                multiple
-                placeholder="请选择"
-                @remove-tag="deleteTag"
-                @change="changeJob"
-              >
-                <el-option
-                  v-for="item in jobs"
-                  :key="item.id"
-                  :label="item.name"
-                  :value="item"
-                />
-              </el-select>
-            </el-form-item>
-            <el-form-item label="性别">
-              <el-radio-group v-model="form.gender" style="width: 178px">
-                <el-radio label="男">男</el-radio>
-                <el-radio label="女">女</el-radio>
-              </el-radio-group>
-            </el-form-item>
-            <el-form-item label="状态">
-              <el-radio-group
-                v-model="form.enabled"
-                :disabled="form.id === user.id"
-              >
-                <el-radio
-                  v-for="item in dict.user_status"
-                  :key="item.id"
-                  :label="item.value === 'true'"
-                >{{ item.label }}
-                </el-radio>
-              </el-radio-group>
-            </el-form-item>
-            <el-form-item style="margin-bottom: 0" label="角色" prop="roles">
-              <el-select
-                v-model="roleDatas"
-                value-key="id"
-                style="width: 437px"
-                multiple
-                placeholder="请选择"
-                @remove-tag="deleteTag"
-                @change="changeRole"
-              >
-                <el-option
-                  v-for="item in roles"
-                  :key="item.id"
-                  :disabled="level !== 1 && item.level <= level"
-                  :label="item.name"
-                  :value="item"
-                />
-              </el-select>
-            </el-form-item>
-            <el-form-item style="margin-bottom: 0" label="租户" prop="tenants">
-              <el-select
-                v-model="form.tenantId"
-                value-key="id"
-                style="width: 437px"
-                clearable
-              >
-                <el-option
-                  v-for="item in tenants"
-                  :key="item.tenantId"
-                  :label="item.name"
-                  :value="parseInt(item.tenantId)"
-                />
-              </el-select>
-            </el-form-item>
-          </el-form>
-          <div slot="footer" class="dialog-footer">
-            <el-button type="text" @click="crud.cancelCU">取消</el-button>
-            <el-button
-              :loading="crud.status.cu === 2"
-              type="primary"
-              @click="crud.submitCU"
-            >确认
-            </el-button>
-          </div>
-        </el-dialog>
-        <!--表格渲染-->
-        <el-table
-          ref="table"
-          v-loading="crud.loading"
-          :data="crud.data"
-          style="width: 100%"
-          @selection-change="crud.selectionChangeHandler"
-        >
-          <el-table-column
-            :selectable="checkboxT"
-            type="selection"
-            width="55"
-          />
-          <el-table-column
-            width="80"
-            label="头像"
-          >
-            <img :src="user.avatarPath ? baseApi + user.avatarPath : Avatar" class="avatar" alt="用户头像">
-          </el-table-column>
-          <el-table-column
-            :show-overflow-tooltip="true"
-            prop="username"
-            width="135"
-            label="用户名"
-          />
-          <el-table-column
-            :show-overflow-tooltip="true"
-            prop="nickName"
-            width="150"
-            label="昵称"
-          />
-          <el-table-column
-            :show-overflow-tooltip="true"
-            prop="phone"
-            width="100"
-            label="电话"
-          />
-          <el-table-column
-            :show-overflow-tooltip="true"
-            width="135"
-            prop="email"
-            label="邮箱"
-          />
-          <el-table-column
-            :show-overflow-tooltip="true"
-            width="200"
-            label="角色"
-          >
-            <template slot-scope="scope">
-              <el-tag
-                v-for="role in scope.row.roles"
-                :key="role.id"
-                type="primary"
-                class="tag"
-              >
-                {{ role.name }}
-              </el-tag>
-            </template>
-          </el-table-column>
-          <el-table-column
-            :show-overflow-tooltip="true"
-            prop="dept"
-            label="部门"
-          >
-            <template slot-scope="scope">
-              <div>{{ scope.row.dept.name }}</div>
-            </template>
-          </el-table-column>
-          <el-table-column
-            :show-overflow-tooltip="true"
-            width="200"
-            label="岗位"
-          >
-            <template slot-scope="scope">
-              <el-tag
-                v-for="job in scope.row.jobs"
-                :key="job.id"
-                type="primary"
-                class="tag"
-              >
-                {{ job.name }}
-              </el-tag>
-            </template>
-          </el-table-column>
-          <el-table-column
-            :show-overflow-tooltip="true"
-            label="租户"
-          >
-            <template slot-scope="scope">
-              <div v-if="scope.row.tenant">{{ scope.row.tenant.name }}</div>
-            </template>
-          </el-table-column>
-          <el-table-column label="状态" align="center" prop="enabled">
-            <template slot-scope="scope">
-              <el-switch
-                v-model="scope.row.enabled"
-                :disabled="user.id === scope.row.id"
-                active-color="#409EFF"
-                inactive-color="#F56C6C"
-                @change="changeEnabled(scope.row, scope.row.enabled)"
-              />
-            </template>
-          </el-table-column>
-          <el-table-column
-            :show-overflow-tooltip="true"
-            prop="createTime"
-            width="135"
-            label="创建日期"
-          />
-          <el-table-column
-            v-if="checkPer(['user_edit', 'user_del'])"
-            label="操作"
-            width="115"
-            align="center"
-            fixed="right"
-          >
-            <template slot-scope="scope">
-              <udOperation
-                :data="scope.row"
-                :permission="permission"
-                :disabled-dle="scope.row.id === user.id"
-              />
-            </template>
-          </el-table-column>
-        </el-table>
-        <!--分页组件-->
-        <pagination />
-      </el-col>
-    </el-row>
+          <template v-slot="scope">
+            <el-switch
+              v-model="scope.row.enabled"
+              inline-prompt
+              :loading="loadingMap[scope.row.id]"
+              :active-text="showDictLabel(statusOption, 'true')"
+              :inactive-text="showDictLabel(statusOption, 'false')"
+              @change="changeEnabled(scope.row, scope.row.enabled)"
+            />
+          </template>
+        </el-table-column>
+        <el-table-column align="left" min-width="50" prop="method" label="租户">
+          <template #default="scope">
+            <div v-if="scope.row.tenant">{{ scope.row.tenant.name }}</div>
+          </template>
+        </el-table-column>
+        <el-table-column
+          align="left"
+          prop="createTime"
+          sortable="custom"
+          label="创建时间"
+        />
+        <el-table-column align="left" label="操作">
+          <template v-slot="scope">
+            <RowOpts :row="scope.row" :val="scope.row.name" :perms="perms" />
+          </template>
+        </el-table-column>
+      </el-table>
+      <el-pagination v-bind="pagination" />
+    </div>
+    <!--表单渲染-->
+    <formPanel
+      :genderOption="genderOption"
+      :status-type-option="statusTypeOption"
+      :department-option="departmentOption"
+      :job-option="allJobData"
+      :role-option="allRoleData"
+      :tenant-option="allTenantData"
+    />
   </div>
 </template>
 
-<script>
-import crudUser from '@/api/permission/user'
-import { isvalidPhone } from '@/utils/validate'
-import { getDepts, getDeptSuperior } from '@/api/permission/dept'
-import { getAllRole, getLevel } from '@/api/permission/role'
-import { getAllJob } from '@/api/permission/job'
-import { getAllTenant } from '@/api/system/tenant'
-import CRUD, { presenter, header, form, crud } from '@crud/crud'
-import rrOperation from '@crud/RR.operation'
-import crudOperation from '@crud/CRUD.operation'
-import udOperation from '@crud/UD.operation'
-import pagination from '@crud/Pagination'
-import DateRangePicker from '@/components/DateRangePicker'
-import Treeselect from '@riophae/vue-treeselect'
-import { mapGetters } from 'vuex'
-import '@riophae/vue-treeselect/dist/vue-treeselect.css'
-import { LOAD_CHILDREN_OPTIONS } from '@riophae/vue-treeselect'
-import Avatar from '@/assets/images/avatar.png'
+<script setup>
+  import { nextTick, ref, reactive } from 'vue'
+  import { getDict, showDictLabel } from '@/utils/dictionary'
+  import { ElMessage, ElMessageBox } from 'element-plus'
+  import formPanel from './module/formPanel.vue'
+  import {
+    add,
+    edit,
+    del,
+    editUserJob,
+    editUserRole,
+    get,
+    download
+  } from '@/api/permission/user'
+  import { getAll as getAllRole, getLevel } from '@/api/permission/role'
+  import { getAll as getAllJob } from '@/api/permission/job'
+  import { getAll as getAllTenant } from '@/api/system/tenant'
+  import { getDeptTree } from '@/api/permission/department'
+  import DateRangePicker from '@/components/CRUD/DateRangePicker.vue'
+  import { useCrud } from '@/components/Crud/UseCrud'
+  import { useUserStore } from '@/pinia/modules/user'
+  import CrudOpts from '@/components/CRUD/CrudOpts.vue'
+  import RowOpts from '@/components/CRUD/RowOpts.vue'
+  import SearchOpts from '@/components/CRUD/SearchOpts.vue'
 
-let userRoles = []
-let userJobs = []
-const defaultForm = {
-  id: 0,
-  username: null,
-  nickName: null,
-  gender: '男',
-  email: null,
-  enabled: true,
-  roles: [],
-  jobs: [],
-  dept: { id: null },
-  phone: '',
-  tenantId: null
-}
-export default {
-  name: 'User',
-  components: {
-    Treeselect,
-    crudOperation,
-    rrOperation,
-    udOperation,
+  defineOptions({
+    name: 'User'
+  })
+
+  const perms = {
+    add: ['sys:user:add'],
+    edit: ['sys:user:edit'],
+    del: ['sys:user:del'],
+    download: ['sys:user:download']
+  }
+
+  //字典
+  const statusTypeOption = ref([])
+  const genderOption = ref([])
+  const departmentOption = ref([])
+
+  //角色
+  const allRoleData = ref([])
+  const roleLevel = ref(0)
+  //岗位
+  const allJobData = ref([])
+  //岗位
+  const allTenantData = ref([])
+
+  const searchInfo = ref({})
+  const {
+    data,
+    loading,
+    onSelectionChange,
     pagination,
-    DateRangePicker
-  },
-  cruds() {
-    return CRUD({
-      title: '用户',
-      url: 'api/user/query',
-      sortFields: ['id desc'],
-      crudMethod: { ...crudUser }
-    })
-  },
-  mixins: [presenter(), header(), form(defaultForm), crud()],
-  // 数据字典
-  dicts: ['user_status'],
-  data() {
-    // 自定义验证
-    const validPhone = (rule, value, callback) => {
-      if (!value) {
-        callback(new Error('请输入电话号码'))
-      } else if (!isvalidPhone(value)) {
-        callback(new Error('请输入正确的11位手机号码'))
-      } else {
-        callback()
-      }
-    }
-    return {
-      height: document.documentElement.clientHeight - 180 + 'px;',
-      deptName: '',
-      depts: [],
-      deptDatas: [],
-      jobs: [],
-      level: 3,
+    searchToggle,
+    onSortChange
+  } = useCrud({
+    crudMethod: {
+      list: get,
+      del: del,
+      add: add,
+      edit: edit,
+      download: download
+    },
+    defaultForm: () => ({
+      id: 0,
+      userName: null,
+      nickName: null,
+      genderCode: 1,
+      email: null,
+      enabled: true,
       roles: [],
-      tenants: [],
-      jobDatas: [],
-      roleDatas: [],
-      defaultProps: { children: 'children', label: 'name', isLeaf: 'leaf' },
-      permission: {
-        add: ['user_add'],
-        edit: ['user_edit'],
-        del: ['user_del'],
-        down: ['user_down']
-      },
-      rules: {
-        username: [
-          { required: true, message: '请输入用户名', trigger: 'blur' },
-          {
-            min: 2,
-            max: 20,
-            message: '长度在 2 到 20 个字符',
-            trigger: 'blur'
-          }
-        ],
-        nickName: [
-          { required: true, message: '请输入用户昵称', trigger: 'blur' },
-          {
-            min: 2,
-            max: 20,
-            message: '长度在 2 到 20 个字符',
-            trigger: 'blur'
-          }
-        ],
-        email: [
-          { required: true, message: '请输入邮箱地址', trigger: 'blur' },
-          { type: 'email', message: '请输入正确的邮箱地址', trigger: 'blur' }
-        ],
-        phone: [{ required: true, trigger: 'blur', validator: validPhone }]
-      },
-      Avatar: Avatar
-    }
-  },
-  computed: {
-    ...mapGetters(['user', 'baseApi'])
-  },
-  created() {
-    this.crud.msg.add = '新增成功，默认密码：123456'
-  },
-  mounted: function() {
-    const that = this
-    window.onresize = function temp() {
-      that.height = document.documentElement.clientHeight - 180 + 'px;'
-    }
-  },
-  methods: {
-    changeRole(value) {
-      userRoles = []
-      value.forEach(function(data, index) {
-        const role = { id: data.id, name: data.name, permission: data.permission }
-        userRoles.push(role)
-      })
-    },
-    changeJob(value) {
-      userJobs = []
-      value.forEach(function(data, index) {
-        const job = { id: data.id, name: data.name }
-        userJobs.push(job)
-      })
-    },
-    deleteTag(value) {
-      userRoles.forEach(function(data, index) {
-        if (data.id === value) {
-          userRoles.splice(index, value)
-        }
-      })
-    },
-    // 新增与编辑前做的操作
-    [CRUD.HOOK.afterToCU](crud, form) {
-      this.getRoles()
-      if (form.id === 0) {
-        this.getDepts()
-      } else {
-        this.getSupDepts(form.dept.id)
-      }
-      this.getRoleLevel()
-      this.getJobs()
-      this.getTenants()
-      // form.enabled = form.enabled
-    },
-    // 新增前将多选的值设置为空
-    [CRUD.HOOK.beforeToAdd]() {
-      this.jobDatas = []
-      this.roleDatas = []
-    },
-    // 初始化编辑时候的角色与岗位
-    [CRUD.HOOK.beforeToEdit](crud, form) {
-      this.jobDatas = []
-      this.roleDatas = []
-      userRoles = []
-      userJobs = []
-      const _this = this
-      form.roles.forEach(function(role, index) {
-        _this.roleDatas.push({ id: role.id, name: role.name })
-        const rol = { id: role.id, name: role.name }
-        userRoles.push(rol)
-      })
-      form.jobs.forEach(function(job, index) {
-        _this.jobDatas.push({ id: job.id, name: job.name })
-        const data = { id: job.id, name: job.name }
-        userJobs.push(data)
-      })
-      if (form.tenantId === 0) {
-        this.form.tenantId = null
-      }
-    },
-    // 提交前做的操作
-    [CRUD.HOOK.afterValidateCU](crud) {
-      if (!crud.form.dept.id) {
-        this.$message({
-          message: '部门不能为空',
-          type: 'warning',
-          center: true
+      jobs: [],
+      dept: { id: null },
+      phone: '',
+      tenantId: null
+    }),
+    searchInfo
+  })
+
+  const init = async () => {
+    statusTypeOption.value = await getDict('status_type')
+    genderOption.value = await getDict('gender_code')
+    const resDeptTree = await getDeptTree()
+    departmentOption.value = resDeptTree.data
+    const resRole = await getAllRole()
+    allRoleData.value = resRole.data
+    const resLevel = await getLevel()
+    roleLevel.value = resLevel.data.level
+    const resJob = await getAllJob()
+    allJobData.value = resJob.data
+    const resTenant = await getAllTenant()
+    allTenantData.value = resTenant.data
+  }
+
+  init()
+
+  const oldRolesMap = {} //原始数据 操作失败后恢复
+  const visibleChangeRole = async (row, flag) => {
+    if (flag) {
+      oldRolesMap[row.id] = row.roles.map((r) => ({ ...r }))
+    } else {
+      await nextTick()
+      const oldIds = (oldRolesMap[row.id] || [])
+        .map((r) => r.id)
+        .sort()
+        .join(',')
+      const newIds = (row.roles || [])
+        .map((r) => r.id)
+        .sort()
+        .join(',')
+      if (oldIds !== newIds) {
+        await editUserRole({
+          id: row.id,
+          roleIdArray: row.roles.map((item) => item.id)
         })
-        return false
-      } else if (this.jobDatas.length === 0) {
-        this.$message({
-          message: '岗位不能为空',
-          type: 'warning',
-          center: true
-        })
-        return false
-      } else if (this.roleDatas.length === 0) {
-        this.$message({
-          message: '角色不能为空',
-          type: 'warning',
-          center: true
-        })
-        return false
-      }
-      crud.form.roles = userRoles
-      crud.form.jobs = userJobs
-      crud.form.phone = crud.form.phone.toString()
-      return true
-    },
-    // 获取左侧部门数据
-    getDeptDatas(node, resolve) {
-      const sort = 'sort asc'
-      const params = { SortFields: sort }
-      if (typeof node !== 'object') {
-        if (node) {
-          params['name'] = node
-        }
-      } else if (node.level !== 0) {
-        params['parentId'] = node.data.id
-      }
-      setTimeout(() => {
-        getDepts(params).then((res) => {
-          if (resolve) {
-            resolve(res.content)
-          } else {
-            this.deptDatas = res.content
-          }
-        })
-      }, 100)
-    },
-    getDepts() {
-      getDepts({ enabled: true }).then((res) => {
-        this.depts = res.content.map(function(obj) {
-          if (obj.hasChildren) {
-            obj.children = null
-          }
-          return obj
-        })
-      })
-    },
-    getSupDepts(deptId) {
-      getDeptSuperior(deptId).then((res) => {
-        const date = res
-        this.buildDepts(date)
-        this.depts = date
-      })
-    },
-    buildDepts(depts) {
-      depts.forEach((data) => {
-        if (data.children) {
-          this.buildDepts(data.children)
-        }
-        if (data.hasChildren && !data.children) {
-          data.children = null
-        }
-      })
-    },
-    // 获取弹窗内部门数据
-    loadDepts({ action, parentNode, callback }) {
-      if (action === LOAD_CHILDREN_OPTIONS) {
-        getDepts({ enabled: true, parentId: parentNode.id }).then((res) => {
-          parentNode.children = res.content.map(function(obj) {
-            if (obj.hasChildren) {
-              obj.children = null
-            }
-            return obj
+          .then(() => {
+            delete oldRolesMap[row.id]
+            ElMessage({ type: 'success', message: '角色修改成功' })
           })
-          setTimeout(() => {
-            callback()
-          }, 200)
-        })
+          .catch(() => {
+            row.roles = oldRolesMap[row.id]
+            delete oldRolesMap[row.id]
+          })
       }
-    },
-    // 切换部门
-    handleNodeClick(data) {
-      if (data.parentId === 0) {
-        this.query.deptId = null
-      } else {
-        this.query.deptId = data.id
-      }
-      this.crud.toQuery()
-    },
-    // 改变状态
-    changeEnabled(data, val) {
-      this.$confirm(
-        '此操作将 "' +
-        this.dict.label.user_status[val] +
-        '" ' +
-        data.username +
-        ', 是否继续？',
-        '提示',
-        {
-          confirmButtonText: '确定',
-          cancelButtonText: '取消',
-          type: 'warning'
-        }
-      )
-        .then(() => {
-          crudUser
-            .edit(data)
-            .then((res) => {
-              this.crud.message(
-                this.dict.label.user_status[val] + '成功',
-                CRUD.NOTIFICATION_TYPE.SUCCESS
-              )
-            })
-            .catch(() => {
-              data.enabled = !data.enabled
-            })
-        })
-        .catch(() => {
-          data.enabled = !data.enabled
-        })
-    },
-    // 获取弹窗内角色数据
-    getRoles() {
-      getAllRole()
-        .then((res) => {
-          this.roles = res
-        })
-        .catch(() => {
-        })
-    },
-    // 获取弹窗内岗位数据
-    getJobs() {
-      getAllJob()
-        .then((res) => {
-          this.jobs = res
-        })
-        .catch(() => {
-        })
-    },
-    // 获取权限级别
-    getRoleLevel() {
-      getLevel()
-        .then((res) => {
-          this.level = res.level
-        })
-        .catch(() => {
-        })
-    },
-    getTenants() {
-      getAllTenant()
-        .then((res) => {
-          this.tenants = res
-        })
-        .catch(() => {
-        })
-    },
-    checkboxT(row, rowIndex) {
-      return row.id !== this.user.id
     }
   }
-}
+
+  const deleteRole = async (row, removed) => {
+    oldRolesMap[row.id] = [...row.roles, removed].map((r) => ({ ...r }))
+    editUserRole({
+      id: row.id,
+      roleIdArray: row.roles.map((item) => item.id)
+    })
+      .then(() => {
+        delete oldRolesMap[row.id]
+        ElMessage({ type: 'success', message: '角色删除成功' })
+      })
+      .catch(() => {
+        row.roles = oldRolesMap[row.id]
+        delete oldRolesMap[row.id]
+      })
+  }
+
+  const oldJobsMap = {} //原始数据 操作失败后恢复
+  const visibleChangeJob = async (row, flag) => {
+    if (flag) {
+      oldJobsMap[row.id] = row.jobs.map((j) => ({ ...j }))
+    } else {
+      await nextTick()
+      const oldIds = (oldJobsMap[row.id] || [])
+        .map((j) => j.id)
+        .sort()
+        .join(',')
+      const newIds = (row.jobs || [])
+        .map((j) => j.id)
+        .sort()
+        .join(',')
+      if (oldIds !== newIds) {
+        await editUserJob({
+          id: row.id,
+          jobIdArray: row.jobs.map((item) => item.id)
+        })
+          .then(() => {
+            delete oldJobsMap[row.id]
+            ElMessage({ type: 'success', message: '岗位修改成功' })
+          })
+          .catch(() => {
+            row.jobs = oldJobsMap[row.id]
+            delete oldJobsMap[row.id]
+          })
+      }
+    }
+  }
+
+  const deleteJob = async (row, removed) => {
+    oldJobsMap[row.id] = [...row.jobs, removed].map((j) => ({ ...j }))
+    editUserJob({
+      id: row.id,
+      jobIdArray: row.jobs.map((item) => item.id)
+    })
+      .then(() => {
+        delete oldJobsMap[row.id]
+        ElMessage({ type: 'success', message: '岗位删除成功' })
+      })
+      .catch(() => {
+        row.jobs = oldJobsMap[row.id]
+        delete oldJobsMap[row.id]
+      })
+  }
+
+  const loadingMap = reactive({})
+  const changeEnabled = async (row, val) => {
+    loadingMap[row.id] = true
+    ElMessageBox.confirm(
+      `你要将${row.userName}的状态切换为【${val ? '启用' : '禁用'}】吗？`,
+      '切换状态',
+      {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }
+    )
+      .then(async () => {
+        await edit(row).then(() => {
+          ElMessage({
+            type: 'success',
+            message: '修改成功'
+          })
+        })
+        loadingMap[row.id] = false
+      })
+      .catch(() => {
+        row.enabled = !row.enabled
+        loadingMap[row.id] = false
+      })
+  }
+
+  const userStore = useUserStore()
+  const checkboxT = (row) => {
+    return row.id !== userStore.userInfo.id
+  }
 </script>
-
-<style rel='stylesheet/scss' lang='scss' scoped>
-::v-deep .vue-treeselect__control,
-::v-deep .vue-treeselect__placeholder,
-::v-deep .vue-treeselect__single-value {
-  height: 30px;
-  line-height: 30px;
-}
-
-.tag {
-  margin-right: 5px;
-}
-
-.avatar {
-  width: 50px;
-  height: 50px;
-  border-radius: 50%;
-}
-</style>

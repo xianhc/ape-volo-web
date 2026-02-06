@@ -1,0 +1,33 @@
+@use './transition.scss';
+
+/** 全局SCSS变量 */
+:root {
+  --ape-volo-radius: 0.25rem;
+}
+
+.html-grey {
+  filter: grayscale(100%);
+}
+
+.html-weakenss {
+  filter: invert(80%);
+}
+
+#nprogress .bar {
+  background: #29d !important;
+}
+
+::-webkit-scrollbar {
+  @apply hidden;
+}
+
+.el-tree--highlight-current .el-tree-node.is-current > .el-tree-node__content {
+  background: var(--el-color-primary-bg) !important;
+}
+
+.el-dropdown {
+  outline: none;
+  * {
+    outline: none;
+  }
+}

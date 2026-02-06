@@ -1,30 +1,67 @@
 <template>
-  <div v-loading="loading" :style="'height:'+ height">
-    <iframe :src="src" frameborder="no" style="width: 100%;height: 100%" scrolling="auto" />
+  <div class="ape-volo-bg">
+    <iframe
+      v-if="reloadFlag"
+      id="base-load-dom"
+      class="w-full border-t dark:border-gray-700"
+      :src="url"
+      style="height: calc(100vh - 200px)"
+    ></iframe>
   </div>
 </template>
-<script>
-export default {
-  props: {
-    src: {
-      type: String,
-      required: true
+
+<script setup>
+  import useResponsive from '@/hooks/responsive'
+  import { emitter } from '@/utils/bus.js'
+  import { ref, onMounted, nextTick, reactive, watchEffect } from 'vue'
+  import { useRouter, useRoute } from 'vue-router'
+  import { useUserStore } from '@/pinia/modules/user'
+  import { useAppStore } from '@/pinia'
+  import { storeToRefs } from 'pinia'
+  const appStore = useAppStore()
+  const { isDark } = storeToRefs(appStore)
+
+  defineOptions({
+    name: 'IFrame'
+  })
+
+  useResponsive(true)
+  const font = reactive({
+    color: 'rgba(0, 0, 0, .15)'
+  })
+
+  watchEffect(() => {
+    font.color = isDark.value ? 'rgba(255,255,255, .15)' : 'rgba(0, 0, 0, .15)'
+  })
+
+  const router = useRouter()
+  const route = useRoute()
+
+  const url = route.meta.iframeUrl || 'https://www.apevolo.com'
+  onMounted(() => {
+    emitter.on('reload', reload)
+    if (userStore.loadingInstance) {
+      userStore.loadingInstance.close()
     }
-  },
-  data() {
-    return {
-      height: document.documentElement.clientHeight - 94.5 + 'px;',
-      loading: true
+  })
+
+  const userStore = useUserStore()
+
+  const reloadFlag = ref(true)
+  let reloadTimer = null
+  const reload = async () => {
+    if (reloadTimer) {
+      window.clearTimeout(reloadTimer)
     }
-  },
-  mounted: function() {
-    setTimeout(() => {
-      this.loading = false
-    }, 230)
-    const that = this
-    window.onresize = function temp() {
-      that.height = document.documentElement.clientHeight - 94.5 + 'px;'
-    }
+    reloadTimer = window.setTimeout(async () => {
+      if (route.meta.keepAlive) {
+        reloadFlag.value = false
+        await nextTick()
+        reloadFlag.value = true
+      } else {
+        const title = route.meta.title
+        router.push({ name: 'Reload', params: { title } })
+      }
+    }, 400)
   }
-}
 </script>
