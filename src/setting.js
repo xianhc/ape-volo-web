@@ -17,7 +17,7 @@ const config = {
   /**
    * @description 默认路由
    */
-  defaultRouter: 'dashboard',
+  defaultRouter: 'Dashboard',
   /**
    * @description 请求超时时间，毫秒（默认2分钟）
    */
