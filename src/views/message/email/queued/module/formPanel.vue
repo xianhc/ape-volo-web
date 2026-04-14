@@ -10,9 +10,9 @@
         <span class="text-lg">{{ getFormTitle() }}</span>
         <div>
           <el-button @click="closeDialog">取消</el-button>
-          <el-button type="primary" :loading="loading" @click="handleSave"
-            >保存</el-button
-          >
+          <el-button type="primary" :loading="loading" @click="handleSave">
+            保存
+          </el-button>
         </div>
       </div>
     </template>
@@ -37,8 +37,8 @@
       </el-form-item>
       <el-form-item label="发送邮箱" prop="emailAccountId">
         <el-select
-          style="width: 100%"
           v-model="form.emailAccountId"
+          style="width: 100%"
           clearable
           filterable
           placeholder="请选择"
@@ -53,8 +53,8 @@
       </el-form-item>
       <el-form-item label="优先级" prop="priority">
         <el-select
-          style="width: 100%"
           v-model="form.priority"
+          style="width: 100%"
           clearable
           filterable
           placeholder="请选择"
@@ -81,26 +81,19 @@
     </el-form>
   </el-drawer>
 </template>
-<script setup>
+<script setup lang="ts">
   import { ref, inject } from 'vue'
+  import type { EmailAccount } from '@/api/message/email/emailAccount'
+  import type { DictOption } from '@/utils/dictionary'
 
-  const props = defineProps({
-    statusTypeOption: {
-      type: Array,
-      required: true
-    },
-    emailAccountOption: {
-      type: Array,
-      required: true
-    },
-    priorityTypeOption: {
-      type: Array,
-      required: true
-    }
-  })
+  const props = defineProps<{
+    statusTypeOption: DictOption[]
+    emailAccountOption: EmailAccount[]
+    priorityTypeOption: DictOption[]
+  }>()
 
   // 注入crud
-  const crud = inject('crud')
+  const crud = inject<any>('crud')
   const {
     form,
     dialogVisible,

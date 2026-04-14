@@ -2,9 +2,9 @@
   <div
     class="flex flex-col md:flex-row w-screen h-screen bg-gray-100 dark:bg-[#181c24] overflow-hidden font-sans relative transition-colors duration-300"
   >
-    <!-- 右上角切换按钮 -->
     <button
-      class="absolute right-6 top-5 z-30 p-2 rounded-full bg-white/80 dark:bg-gray-800/60 shadow hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+      type="button"
+      class="absolute right-6 top-5 z-30 p-0 border-0 bg-transparent shadow-none appearance-none"
     >
       <el-tooltip
         class=""
@@ -29,7 +29,6 @@
       </el-tooltip>
     </button>
 
-    <!-- 左上 Logo -->
     <div class="absolute left-4 top-4 z-20 flex items-center">
       <img :src="setting.appLogo" :alt="setting.appName" class="w-20 h-16" />
       <p
@@ -38,23 +37,18 @@
         {{ setting.appName }}
       </p>
     </div>
-    <!-- 左侧 -->
     <div
       class="relative flex-1 md:basis-3/5 min-h-[200px] flex flex-col items-center justify-center overflow-hidden"
     >
-      <!-- 背景层（浅/深色渐变）-->
       <div
         class="absolute inset-0 z-0 bg-gradient-to-br from-pink-100 via-blue-100 to-white dark:from-[#222735] dark:via-[#1a233a] dark:to-[#232b3f] transition-colors duration-300"
       ></div>
-      <!-- 玻璃蒙层 -->
       <div
         class="absolute inset-0 z-10 bg-white/60 backdrop-blur-lg dark:bg-[#232b3f]/60 dark:backdrop-blur-xl transition-colors duration-300"
       ></div>
-      <!-- 对角装饰 -->
       <div
         class="absolute inset-0 z-20 bg-gradient-to-tr from-blue-200/40 via-transparent to-pink-200/30 blur-3xl dark:from-blue-900/30 dark:to-purple-800/40 transition-colors duration-300"
       ></div>
-      <!-- logo 动画 -->
       <div
         class="relative z-30 flex items-center justify-center w-40 h-40 md:w-64 md:h-64 animate-float mb-8"
       >
@@ -76,7 +70,6 @@
         </p>
       </div>
     </div>
-    <!-- 右侧 -->
     <div
       class="relative flex-1 md:basis-2/5 min-h-[300px] bg-white dark:bg-[#232b3f] flex flex-col items-center justify-center z-10 transition-colors duration-300"
     >
@@ -94,11 +87,11 @@
       </div>
       <el-form
         ref="loginForm"
+        class="w-full max-w-[360px]"
         :model="loginFormData"
         :rules="rules"
         :validate-on-rule-change="false"
         @keyup.enter="submitForm"
-        class="w-full max-w-[360px]"
       >
         <el-form-item prop="userName" class="mb-6">
           <el-input
@@ -157,7 +150,7 @@
       </el-form>
       <div class="w-full absolute left-0 right-0 bottom-3 mx-auto z-20">
         <BottomInfo>
-          <div class="flex items-center justify-center gap-2 hidden md:flex">
+          <div class="hidden md:flex items-center justify-center gap-2">
             <a href="https://www.apevolo.com/" target="_blank">
               <img src="@/assets/docs.png" class="w-8 h-8" alt="官网文档" />
             </a>
@@ -171,11 +164,11 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
   import { getLoginCaptcha } from '@/api/verificationCode'
   import BottomInfo from '@/components/BottomInfo/index.vue'
   import { reactive, ref } from 'vue'
-  import { ElMessage } from 'element-plus'
+  import { ElMessage, type FormInstance } from 'element-plus'
   import { useAppStore } from '@/pinia'
   import { useUserStore } from '@/pinia/modules/user'
   import setting from '@/setting'
@@ -191,7 +184,7 @@
     loginFormData.captchaId = res.data.captchaId
     loginFormData.showCaptcha = res.data.showCaptcha
   }
-  const loginForm = ref(null)
+  const loginForm = ref<FormInstance | null>(null)
   const picPath = ref('')
   const loading = ref(false)
   const loginFormData = reactive({
@@ -211,7 +204,7 @@
     )
   }
   const submitForm = () => {
-    loginForm.value.validate(async (v) => {
+    loginForm.value?.validate(async (v: boolean) => {
       if (!v) {
         ElMessage({
           type: 'error',
@@ -219,14 +212,12 @@
           showClose: true
         })
         await loginVerify()
-        return false
+        return
       }
       const flag = await login()
       if (!flag) {
         await loginVerify()
-        return false
       }
-      return true
     })
   }
   const rules = reactive({

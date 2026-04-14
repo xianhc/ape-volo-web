@@ -10,9 +10,9 @@
         <span class="text-lg">{{ getFormTitle() }}</span>
         <div>
           <el-button @click="closeDialog">取 消</el-button>
-          <el-button type="primary" :loading="loading" @click="handleSave"
-            >确 定</el-button
-          >
+          <el-button type="primary" :loading="loading" @click="handleSave">
+            确 定
+          </el-button>
         </div>
       </div>
     </template>
@@ -40,22 +40,24 @@
       <el-form-item label="性别">
         <el-radio-group v-model="form.genderCode">
           <el-radio
-            border
             v-for="item in props.genderOption"
             :key="item.id"
+            border
             :value="Number(item.value)"
-            >{{ item.label }}
+          >
+            {{ item.label }}
           </el-radio>
         </el-radio-group>
       </el-form-item>
       <el-form-item label="状态">
         <el-radio-group v-model="form.enabled" :disabled="false">
           <el-radio
-            border
-            v-for="item in props.statusOption"
+            v-for="item in props.statusTypeOption"
             :key="item.id"
-            :value="strToBool(item.value)"
-            >{{ item.label }}
+            border
+            :value="strToBool(String(item.value))"
+          >
+            {{ item.label }}
           </el-radio>
         </el-radio-group>
       </el-form-item>
@@ -77,8 +79,8 @@
       </el-form-item>
       <el-form-item label="租户">
         <el-select
-          style="width: 100%"
           v-model="form.tenantId"
+          style="width: 100%"
           clearable
           filterable
           placeholder="请选择"
@@ -93,8 +95,8 @@
       </el-form-item>
       <el-form-item label="角色" prop="roles" class="col-span-2">
         <el-select
-          style="width: 100%"
           v-model="form.roles"
+          style="width: 100%"
           value-key="id"
           multiple
           clearable
@@ -114,8 +116,8 @@
       </el-form-item>
       <el-form-item label="岗位" prop="jobs" class="col-span-2">
         <el-select
-          style="width: 100%"
           v-model="form.jobs"
+          style="width: 100%"
           value-key="id"
           clearable
           filterable
@@ -136,42 +138,29 @@
     </el-form>
   </el-drawer>
 </template>
-<script setup>
+<script setup lang="ts">
   import { useAppStore } from '@/pinia'
   import { inject, ref } from 'vue'
   import { strToBool } from '@/utils/converter'
   import { isvalidPhone } from '@/utils/validate'
+  import { type DictOption } from '@/utils/dictionary'
+  import { type Department } from '@/api/permission/department'
+  import { type Role } from '@/api/permission/role'
+  import { type Job } from '@/api/permission/job'
+  import { type Tenant } from '@/api/system/tenant'
 
   const appStore = useAppStore()
 
-  const props = defineProps({
-    statusTypeOption: {
-      type: Array,
-      required: true
-    },
-    genderOption: {
-      type: Array,
-      required: true
-    },
-    departmentOption: {
-      type: Array,
-      required: true
-    },
-    jobOption: {
-      type: Array,
-      required: true
-    },
-    roleOption: {
-      type: Array,
-      required: true
-    },
-    tenantOption: {
-      type: Array,
-      required: true
-    }
-  })
+  const props = defineProps<{
+    statusTypeOption: DictOption[]
+    genderOption: DictOption[]
+    departmentOption: Department[]
+    jobOption: Job[]
+    roleOption: Role[]
+    tenantOption: Tenant[]
+  }>()
 
-  const validPhone = (rule, value, callback) => {
+  const validPhone = (_rule: any, value: any, callback: any) => {
     if (!value) {
       callback(new Error('请输入电话号码'))
     } else if (!isvalidPhone(value)) {
@@ -217,7 +206,7 @@
   })
 
   // 注入crud
-  const crud = inject('crud')
+  const crud = inject<any>('crud')
   const {
     form,
     dialogVisible,

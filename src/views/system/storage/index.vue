@@ -13,7 +13,7 @@
     <div class="ape-volo-table">
       <CrudOpts :perms="perms">
         <template #left>
-          <el-button @click="uploadDialogVisible = true" type="primary">
+          <el-button type="primary" @click="uploadDialogVisible = true">
             <el-icon>
               <Upload />
             </el-icon>
@@ -23,11 +23,11 @@
       </CrudOpts>
       <el-table
         ref="tableRef"
-        :data="data"
         v-loading="loading"
+        :data="data"
+        row-key="id"
         @selection-change="onSelectionChange"
         @sort-change="onSortChange"
-        row-key="id"
       >
         <el-table-column type="selection" width="55" />
         <el-table-column align="center" label="预览图" width="100">
@@ -60,7 +60,7 @@
           align="center"
           label="操作"
         >
-          <template v-slot="scope">
+          <template #default="scope">
             <RowOpts :row="scope.row" :val="scope.row.name" :perms="perms" />
           </template>
         </el-table-column>
@@ -72,12 +72,12 @@
     <el-dialog v-model="uploadDialogVisible" title="文件上传" width="600px">
       <el-upload
         ref="uploadRef"
+        v-model:file-list="fileList"
         :action="`${getBaseUrl()}/storage/upload`"
         :headers="headers"
         :show-file-list="true"
         :auto-upload="false"
         multiple
-        v-model:file-list="fileList"
         class="upload-area"
         :before-upload="beforeUpload"
         :on-error="uploadError"
@@ -95,8 +95,8 @@
         <el-button
           type="primary"
           :loading="uploadLoading"
-          @click="handleConfirmUpload"
           :disabled="fileList.length === 0"
+          @click="handleConfirmUpload"
         >
           确认上传
         </el-button>
@@ -124,23 +124,28 @@
       <template #footer>
         <div>
           <el-button @click="closeDialog">取消</el-button>
-          <el-button type="primary" :loading="loading" @click="handleSave"
-            >保存</el-button
-          >
+          <el-button type="primary" :loading="loading" @click="handleSave">
+            保存
+          </el-button>
         </div>
       </template>
     </el-dialog>
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
   import { del, edit, get, add, download } from '@/api/system/storage'
+  import type {
+    Storage,
+    StorageQueryParams
+  } from '@/api/system/types/storage.types'
   import { ref } from 'vue'
-  import DateRangePicker from '@/components/CRUD/DateRangePicker.vue'
+  import type { UploadInstance, FormInstance } from 'element-plus'
+  import DateRangePicker from '@/components/Crud/DateRangePicker.vue'
   import { useCrud } from '@/components/Crud/UseCrud'
-  import CrudOpts from '@/components/CRUD/CrudOpts.vue'
-  import RowOpts from '@/components/CRUD/RowOpts.vue'
-  import SearchOpts from '@/components/CRUD/SearchOpts.vue'
+  import CrudOpts from '@/components/Crud/CrudOpts.vue'
+  import RowOpts from '@/components/Crud/RowOpts.vue'
+  import SearchOpts from '@/components/Crud/SearchOpts.vue'
   import { useAppStore } from '@/pinia'
   import { getBaseUrl } from '@/utils/index'
   import { Upload } from '@element-plus/icons-vue'
@@ -160,7 +165,7 @@
 
   const appStore = useAppStore()
 
-  const searchInfo = ref({})
+  const searchInfo = ref<StorageQueryParams>({})
 
   const {
     data,
@@ -178,8 +183,8 @@
     crudMethod: {
       list: get,
       del: del,
-      add: add,
-      edit: edit,
+      add: (data: any) => add(data),
+      edit: (data: any) => edit(data as Partial<Storage>),
       download: download
     },
     defaultForm: () => ({ description: '' }),
@@ -192,12 +197,12 @@
   })
   const uploadDialogVisible = ref(false)
   const uploadLoading = ref(false)
-  const uploadRef = ref(null)
+  const uploadRef = ref<UploadInstance | null>(null)
   const fileList = ref([])
 
   const handleConfirmUpload = () => {
     uploadLoading.value = true
-    uploadRef.value.submit()
+    uploadRef.value?.submit()
   }
 
   const handleCancel = () => {
@@ -206,7 +211,7 @@
     fileList.value = []
   }
 
-  const beforeUpload = (file) => {
+  const beforeUpload = (file: File) => {
     let isTrue = true
     isTrue = file.size / 1024 / 1024 < 5
     if (!isTrue) {
@@ -227,19 +232,19 @@
     refresh()
   }
 
-  const uploadError = (res, file) => {
+  const uploadError = (res: any, file: any) => {
     ElMessage.error(`…${res.message}: ${file.name}`)
     uploadLoading.value = false
   }
 
-  const storageForm = ref(null)
+  const storageForm = ref<FormInstance | null>(null)
   const rules = ref({
     description: [
       { required: true, message: '请输入文件描述', trigger: 'blur' }
     ]
   })
   // 验证表单并保存
-  const handleSave = () => validateAndSave(storageForm.value)
+  const handleSave = () => validateAndSave(storageForm.value || undefined)
 </script>
 <style scoped>
   .file {

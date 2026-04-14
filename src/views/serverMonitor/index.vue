@@ -27,7 +27,7 @@
               <div class="content">
                 <el-progress
                   type="dashboard"
-                  :percentage="parseFloat(data.disk.usageRate)"
+                  :percentage="parseFloat(data.disk.usageRate || '0')"
                 />
               </div>
             </el-tooltip>
@@ -50,7 +50,7 @@
               <div class="content">
                 <el-progress
                   type="dashboard"
-                  :percentage="parseFloat(data.memory.usageRate)"
+                  :percentage="parseFloat(data.memory.usageRate || '0')"
                 />
               </div>
             </el-tooltip>
@@ -72,7 +72,7 @@
               <div class="content">
                 <el-progress
                   type="dashboard"
-                  :percentage="parseFloat(data.cpu.used)"
+                  :percentage="parseFloat(data.cpu.used || '0')"
                 />
               </div>
             </el-tooltip>
@@ -97,7 +97,7 @@
               <div class="content">
                 <el-progress
                   type="dashboard"
-                  :percentage="parseFloat(data.swap.usageRate) || 0"
+                  :percentage="parseFloat(data.swap.usageRate || '0') || 0"
                 />
               </div>
             </el-tooltip>
@@ -133,14 +133,60 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
   import { ref, reactive, onMounted, onBeforeUnmount } from 'vue'
   import { ElCard, ElRow, ElCol, ElTooltip, ElProgress } from 'element-plus'
-  import ECharts from '@/components/eCharts/index.vue'
+  import ECharts from '@/components/Echarts/index.vue'
   import { initData } from '@/api/data'
-  const monitor = ref(null)
+
+  interface SysInfo {
+    os?: string
+    ip?: string
+    day?: string
+  }
+
+  interface DiskInfo {
+    total?: string
+    available?: string
+    usageRate?: string
+    used?: string
+  }
+
+  interface MemoryInfo {
+    total?: string
+    used?: string
+    available?: string
+    usageRate?: string
+  }
+
+  interface CpuInfo {
+    name?: string
+    package?: string
+    core?: string
+    logic?: string
+    used?: string
+    coreNumber?: number
+  }
+
+  interface SwapInfo {
+    total?: string
+    used?: string
+    available?: string
+    usageRate?: string
+  }
+
+  interface ServerData {
+    sys: SysInfo
+    disk: DiskInfo
+    memory: MemoryInfo
+    cpu: CpuInfo
+    swap: SwapInfo
+    time?: string
+  }
+
+  const monitor = ref<ReturnType<typeof setInterval> | null>(null)
   const url = 'service/resources/info'
-  const data = reactive({
+  const data: ServerData = reactive({
     sys: {},
     disk: {},
     memory: {},
@@ -151,11 +197,11 @@
   const cpuInfo = reactive({
     grid: { top: 40, bottom: 40, left: 40, right: 20 },
     tooltip: { trigger: 'axis' },
-    xAxis: { type: 'category', boundaryGap: false, data: [] },
+    xAxis: { type: 'category', boundaryGap: false, data: [] as string[] },
     yAxis: { type: 'value', min: 0, max: 100, interval: 20 },
     series: [
       {
-        data: [],
+        data: [] as number[],
         type: 'line',
         areaStyle: { color: 'rgb(32, 160, 255)' },
         itemStyle: { color: '#6fbae1', lineStyle: { color: '#6fbae1' } }
@@ -166,11 +212,11 @@
   const memoryInfo = reactive({
     grid: { top: 40, bottom: 40, left: 40, right: 20 },
     tooltip: { trigger: 'axis' },
-    xAxis: { type: 'category', boundaryGap: false, data: [] },
+    xAxis: { type: 'category', boundaryGap: false, data: [] as string[] },
     yAxis: { type: 'value', min: 0, max: 100, interval: 20 },
     series: [
       {
-        data: [],
+        data: [] as number[],
         type: 'line',
         areaStyle: { color: 'rgb(32, 160, 255)' },
         itemStyle: { color: '#6fbae1', lineStyle: { color: '#6fbae1' } }
@@ -179,7 +225,7 @@
   })
 
   // 保证响应式赋值
-  function fillReactive(target, src) {
+  function fillReactive(target: any, src: any) {
     for (const key in target) {
       if (typeof target[key] === 'object' && target[key] !== null && src[key]) {
         Object.assign(target[key], src[key])
@@ -189,17 +235,19 @@
     }
   }
 
-  function updateCharts(res) {
+  function updateCharts(res: Partial<ServerData>) {
     if (cpuInfo.xAxis.data.length >= 8) {
       cpuInfo.xAxis.data.shift()
       memoryInfo.xAxis.data.shift()
       cpuInfo.series[0].data.shift()
       memoryInfo.series[0].data.shift()
     }
-    cpuInfo.xAxis.data.push(res.time)
-    memoryInfo.xAxis.data.push(res.time)
-    cpuInfo.series[0].data.push(parseFloat(res.cpu.used) || 0)
-    memoryInfo.series[0].data.push(parseFloat(res.memory.usageRate) || 0)
+    cpuInfo.xAxis.data.push(res.time || '')
+    memoryInfo.xAxis.data.push(res.time || '')
+    cpuInfo.series[0].data.push(parseFloat(res.cpu?.used || '0') || 0)
+    memoryInfo.series[0].data.push(
+      parseFloat(res.memory?.usageRate || '0') || 0
+    )
   }
 
   function init() {
@@ -224,7 +272,9 @@
   })
 
   onBeforeUnmount(() => {
-    clearInterval(monitor.value)
+    if (monitor.value) {
+      clearInterval(monitor.value)
+    }
   })
 </script>
 

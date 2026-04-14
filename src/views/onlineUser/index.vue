@@ -1,23 +1,23 @@
 <template>
   <div>
-    <!-- <div class="p-10 rounded"></div> -->
     <div class="ape-volo-table">
       <div class="ape-volo-btn-list">
-        <el-button type="primary" icon="Refresh" @click="refresh"
-          >刷新</el-button
-        >
+        <el-button type="primary" icon="Refresh" @click="refresh">
+          刷新
+        </el-button>
         <el-button
           v-has-role="['admin']"
           type="warning"
           icon="download"
           @click="doExport()"
-          >导出
+        >
+          导出
         </el-button>
       </div>
       <el-table
         ref="tableRef"
-        :data="data"
         v-loading="loading"
+        :data="data"
         style="width: 100%"
         row-key="id"
       >
@@ -41,7 +41,8 @@
               type="danger"
               link
               @click="dropOut(scope.row)"
-              >强退
+            >
+              强退
             </el-button>
           </template>
         </el-table-column>
@@ -51,7 +52,7 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
   import { ref } from 'vue'
   import { get, del, download } from '@/api/onlineUser'
   import { useCrud } from '@/components/Crud/UseCrud'
@@ -64,19 +65,25 @@
   const searchInfo = ref({})
 
   const { data, loading, refresh, pagination, doExport } = useCrud({
-    crudMethod: { list: get, del: del, download: download },
+    crudMethod: {
+      add: () => Promise.resolve({} as any),
+      list: get,
+      del: del,
+      edit: () => Promise.resolve({} as any),
+      download: download
+    },
     defaultForm: () => ({}),
     searchInfo
   })
 
-  const dropOut = (row) => {
+  const dropOut = (row: any) => {
     ElMessageBox.confirm(`确定要强退${row.account}吗, 是否继续?`, '提示', {
       confirmButtonText: '确定',
       cancelButtonText: '取消',
       type: 'warning'
     })
       .then(() => {
-        return del({ IdArray: [row.accessToken] })
+        return del([row.accessToken])
       })
       .then(() => {
         ElMessage({

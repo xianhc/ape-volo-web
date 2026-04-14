@@ -14,7 +14,7 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
   defineProps({
     currentPage: {
       type: Number,
@@ -47,21 +47,21 @@
     'next-click'
   ])
 
-  const handleCurrentChange = (page) => {
+  const handleCurrentChange = (page: number) => {
     emit('update:currentPage', page)
     emit('current-change', page)
   }
 
-  const handleSizeChange = (size) => {
+  const handleSizeChange = (size: number) => {
     emit('update:pageSize', size)
     emit('size-change', size)
   }
 
-  const handlePrevClick = (page) => {
+  const handlePrevClick = (page: number) => {
     emit('prev-click', page)
   }
 
-  const handleNextClick = (page) => {
+  const handleNextClick = (page: number) => {
     emit('next-click', page)
   }
 </script>

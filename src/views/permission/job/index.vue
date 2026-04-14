@@ -2,7 +2,7 @@
   <div>
     <div v-if="searchToggle" class="ape-volo-search">
       <el-form :inline="true" :model="searchInfo">
-        <el-form-item label="设置名称">
+        <el-form-item label="名称">
           <el-input
             v-model="searchInfo.name"
             clearable
@@ -10,7 +10,7 @@
             placeholder="请输入"
           />
         </el-form-item>
-        <el-form-item label="设置状态">
+        <el-form-item label="状态">
           <el-select
             v-model="searchInfo.enabled"
             clearable
@@ -33,12 +33,12 @@
       <CrudOpts :perms="perms" />
       <el-table
         ref="tableRef"
-        :data="data"
         v-loading="loading"
+        :data="data"
+        row-key="id"
+        style="width: 100%"
         @selection-change="onSelectionChange"
         @sort-change="onSortChange"
-        style="width: 100%"
-        row-key="id"
       >
         <el-table-column align="left" type="selection" width="55" />
         <el-table-column
@@ -59,7 +59,7 @@
           label="状态"
           sortable="custom"
         >
-          <template v-slot="scope">
+          <template #default="scope">
             <el-switch
               v-model="scope.row.enabled"
               inline-prompt
@@ -77,7 +77,7 @@
           sortable="custom"
         />
         <el-table-column :min-width="appStore.operateMinWith" label="操作">
-          <template v-slot="scope">
+          <template #default="scope">
             <RowOpts :row="scope.row" :val="scope.row.name" :perms="perms" />
           </template>
         </el-table-column>
@@ -89,17 +89,18 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
   import { del, edit, get, add, download } from '@/api/permission/job'
+  import type { JobQueryParams } from '@/api/permission/types/job.types'
   import { reactive, ref } from 'vue'
   import { ElMessage, ElMessageBox } from 'element-plus'
   import formPanel from './module/formPanel.vue'
-  import DateRangePicker from '@/components/CRUD/DateRangePicker.vue'
-  import { getDict, showDictLabel } from '@/utils/dictionary'
+  import DateRangePicker from '@/components/Crud/DateRangePicker.vue'
+  import { getDict, showDictLabel, type DictOption } from '@/utils/dictionary'
   import { useCrud } from '@/components/Crud/UseCrud'
-  import CrudOpts from '@/components/CRUD/CrudOpts.vue'
-  import RowOpts from '@/components/CRUD/RowOpts.vue'
-  import SearchOpts from '@/components/CRUD/SearchOpts.vue'
+  import CrudOpts from '@/components/Crud/CrudOpts.vue'
+  import RowOpts from '@/components/Crud/RowOpts.vue'
+  import SearchOpts from '@/components/Crud/SearchOpts.vue'
   import { useAppStore } from '@/pinia'
 
   defineOptions({
@@ -115,10 +116,10 @@
 
   const appStore = useAppStore()
 
-  const searchInfo = ref({})
+  const searchInfo = ref<JobQueryParams>({})
 
   // 状态
-  const statusTypeOption = ref([])
+  const statusTypeOption = ref<DictOption[]>([])
   const {
     data,
     searchToggle,
@@ -142,8 +143,8 @@
     searchInfo
   })
 
-  const loadingMap = reactive({})
-  const changeEnabled = async (row, val) => {
+  const loadingMap = reactive<Record<string | number, boolean>>({})
+  const changeEnabled = async (row: any, val: boolean) => {
     loadingMap[row.id] = true
     ElMessageBox.confirm(
       `你要将${row.name}的状态切换为【${val ? '启用' : '禁用'}】吗？`,

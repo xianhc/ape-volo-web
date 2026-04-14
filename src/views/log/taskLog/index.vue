@@ -4,7 +4,7 @@
       <el-form :inline="true" :model="searchInfo">
         <el-form-item label="作业名称">
           <el-select
-            v-model="searchInfo.taskId"
+            v-model="searchInfo.taskName"
             filterable
             clearable
             placeholder="请选择"
@@ -18,11 +18,7 @@
           </el-select>
         </el-form-item>
         <el-form-item label="作业结果">
-          <el-select
-            v-model="searchInfo.isSuccess"
-            clearable
-            placeholder="请选择"
-          >
+          <el-select v-model="searchInfo.status" clearable placeholder="请选择">
             <el-option label="成功" :value="true"></el-option>
             <el-option label="失败" :value="false"></el-option>
           </el-select>
@@ -39,23 +35,24 @@
           type="warning"
           icon="download"
           @click="doExport()"
-          >导出
+        >
+          导出
         </el-button>
       </div>
       <el-table
         ref="tableRef"
-        :data="data"
         v-loading="loading"
-        @sort-change="onSortChange"
+        :data="data"
         row-key="id"
+        @sort-change="onSortChange"
       >
         <el-table-column prop="createTime" label="作业时间" sortable="custom" />
         <el-table-column prop="taskGroup" label="任务组" sortable="custom" />
         <el-table-column prop="taskName" label="任务名称" sortable="custom" />
         <el-table-column prop="isSuccess" label="执行结果">
-          <template v-slot="scope">
-            <el-tag :type="scope.row.isSuccess ? 'success' : 'danger'"
-              >{{ scope.row.isSuccess ? '成功' : '失败' }}
+          <template #default="scope">
+            <el-tag :type="scope.row.isSuccess ? 'success' : 'danger'">
+              {{ scope.row.isSuccess ? '成功' : '失败' }}
             </el-tag>
           </template>
         </el-table-column>
@@ -64,29 +61,30 @@
           label="请求耗时"
           sortable="custom"
         >
-          <template v-slot="scope">
-            <el-tag v-if="scope.row.executionDuration <= 200" type="success"
-              >{{ scope.row.executionDuration }}ms
+          <template #default="scope">
+            <el-tag v-if="scope.row.executionDuration <= 200" type="success">
+              {{ scope.row.executionDuration }}ms
             </el-tag>
-            <el-tag v-else-if="scope.row.executionDuration <= 500"
-              >{{ scope.row.executionDuration }}ms
+            <el-tag v-else-if="scope.row.executionDuration <= 500">
+              {{ scope.row.executionDuration }}ms
             </el-tag>
             <el-tag
               v-else-if="scope.row.executionDuration <= 1000"
               type="warning"
-              >{{ scope.row.executionDuration }}ms
+            >
+              {{ scope.row.executionDuration }}ms
             </el-tag>
-            <el-tag v-else type="danger"
-              >{{ scope.row.executionDuration }}ms
+            <el-tag v-else type="danger">
+              {{ scope.row.executionDuration }}ms
             </el-tag>
           </template>
         </el-table-column>
         <el-table-column :min-width="appStore.operateMinWith" label="操作">
-          <template v-slot="scope">
+          <template #default="scope">
             <el-button
-              @click="showTaskLogDetail(scope.row)"
               icon="view"
               type="text"
+              @click="showTaskLogDetail(scope.row)"
             >
               详情
             </el-button>
@@ -149,14 +147,18 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
   import { get, download } from '@/api/log/taskLog'
+  import type {
+    TaskLog,
+    TaskLogQueryParams
+  } from '@/api/log/types/taskLog.types'
   import { ref } from 'vue'
-  import DateRangePicker from '@/components/CRUD/DateRangePicker.vue'
+  import DateRangePicker from '@/components/Crud/DateRangePicker.vue'
   import { useCrud } from '@/components/Crud/UseCrud'
-  import SearchOpts from '@/components/CRUD/SearchOpts.vue'
+  import SearchOpts from '@/components/Crud/SearchOpts.vue'
   import { useAppStore } from '@/pinia'
-  import { getAll } from '@/api/system/timing'
+  import { getAll, type Timing } from '@/api/system/timing'
 
   defineOptions({
     name: 'TaskLog'
@@ -165,14 +167,19 @@
   const appStore = useAppStore()
 
   const taskLogDetailDrawer = ref(false)
-  const currentRow = ref({})
-  const tableRef = ref()
-  const searchInfo = ref({})
-  const allTaskData = ref([])
+  const currentRow = ref<TaskLog>({} as TaskLog)
+  const searchInfo = ref<TaskLogQueryParams>({})
+  const allTaskData = ref<Timing[]>([])
 
   const { data, searchToggle, loading, pagination, onSortChange, doExport } =
     useCrud({
-      crudMethod: { list: get, download: download },
+      crudMethod: {
+        list: get,
+        add: () => Promise.resolve(),
+        edit: () => Promise.resolve(),
+        del: () => Promise.resolve(),
+        download: download
+      },
       defaultForm: () => ({}),
       searchInfo
     })
@@ -184,7 +191,7 @@
 
   init()
 
-  const showTaskLogDetail = (row) => {
+  const showTaskLogDetail = (row: any) => {
     taskLogDetailDrawer.value = true
     currentRow.value = { ...row }
   }

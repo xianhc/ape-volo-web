@@ -16,7 +16,7 @@
   </el-form-item>
 </template>
 
-<script setup>
+<script setup lang="ts">
   import { ref, watch } from 'vue'
   import { formatTime } from '@/utils/dateTime'
 
@@ -44,11 +44,11 @@
   const startDate = ref(props.modelValue.startTime || null)
   const endDate = ref(props.modelValue.endTime || null)
 
-  const disabledStartDate = (time) => {
+  const disabledStartDate = (time: Date) => {
     return endDate.value ? time.getTime() > endDate.value.getTime() : false
   }
 
-  const disabledEndDate = (time) => {
+  const disabledEndDate = (time: Date) => {
     return startDate.value ? time.getTime() < startDate.value.getTime() : false
   }
 

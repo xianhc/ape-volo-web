@@ -58,9 +58,9 @@
                 <div
                   class="w-12 h-12 rounded border-2 border-gray-300 dark:border-neutral-500 bg-gray-200 dark:bg-gray-200 flex items-center justify-center group-hover:bg-blue-400 group-hover:text-white group-hover:border-blue-400 transition-all duration-200"
                 >
-                  <el-icon class="text-2xl"
-                    ><component :is="item.icon"
-                  /></el-icon>
+                  <el-icon class="text-2xl">
+                    <component :is="item.icon" />
+                  </el-icon>
                 </div>
                 <div
                   class="text-sm mt-3 text-gray-700 dark:text-gray-300 font-medium"
@@ -87,9 +87,9 @@
                 class="flex flex-col justify-between p-6 min-h-[140px]"
               >
                 <div class="flex items-center mb-2">
-                  <el-icon class="text-3xl mr-2"
-                    ><component :is="item.icon"
-                  /></el-icon>
+                  <el-icon class="text-3xl mr-2">
+                    <component :is="item.icon" />
+                  </el-icon>
                   <span class="text-xl font-bold">{{ item.title }}</span>
                 </div>
                 <div class="flex-1 text-base mb-2">
@@ -165,9 +165,9 @@
                     </el-tag>
                   </div>
 
-                  <el-text class="changeLog-content">{{
-                    item.content
-                  }}</el-text>
+                  <el-text class="changeLog-content">
+                    {{ item.content }}
+                  </el-text>
 
                   <div v-if="item.link">
                     <el-link
@@ -190,14 +190,15 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
   defineOptions({
     name: 'Dashboard'
   })
 
   import { ref, watch, computed } from 'vue'
-  import ECharts from '@/components/eCharts/index.vue'
+  import ECharts from '@/components/Echarts/index.vue'
   import { getVisitTrend } from '@/api/log/operateLog'
+  import type { VisitTrendData } from '@/api/log/types/operateLog.types'
   import { useUserStore } from '@/pinia/modules/user'
   import { getBaseUrl } from '@/utils/index'
   import { useRouter } from 'vue-router'
@@ -207,6 +208,13 @@
 
   // 更新记录
   const changeLogList = ref([
+    {
+      version: 'v3.5.2',
+      date: '2026-04-12',
+      content: '前端重构为TS版本，UnoCSS替换Tailwind CSS，用户偏好设置持久化。',
+      link: 'https://www.apevolo.com/change-log.html',
+      tag: '里程碑'
+    },
     {
       version: 'v3.5.1',
       date: '2026-02-06',
@@ -269,9 +277,7 @@
    * 获取访问趋势数据，并更新图表配置
    */
   const fetchVisitTrendData = () => {
-    getVisitTrend({
-      days: visitTrendDateRange.value
-    }).then((res) => {
+    getVisitTrend(visitTrendDateRange.value).then((res) => {
       updateVisitTrendChartOptions(res.data)
     })
   }
@@ -281,7 +287,7 @@
    *
    * @param data - 访问趋势数据
    */
-  const updateVisitTrendChartOptions = (data) => {
+  const updateVisitTrendChartOptions = (data: VisitTrendData) => {
     visitTrendChartOptions.value = {
       tooltip: {
         trigger: 'axis'
@@ -353,7 +359,7 @@
     { immediate: true }
   )
 
-  const toPath = (item) => {
+  const toPath = (item: any) => {
     router.push({ name: item.path })
   }
 

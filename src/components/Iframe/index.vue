@@ -10,7 +10,7 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
   import useResponsive from '@/hooks/responsive'
   import { emitter } from '@/utils/bus.js'
   import { ref, onMounted, nextTick, reactive, watchEffect } from 'vue'
@@ -37,7 +37,7 @@
   const router = useRouter()
   const route = useRoute()
 
-  const url = route.meta.iframeUrl || 'https://www.apevolo.com'
+  const url = (route.meta.iframeUrl as string) || 'https://www.apevolo.com'
   onMounted(() => {
     emitter.on('reload', reload)
     if (userStore.loadingInstance) {
@@ -48,7 +48,7 @@
   const userStore = useUserStore()
 
   const reloadFlag = ref(true)
-  let reloadTimer = null
+  let reloadTimer: number | null = null
   const reload = async () => {
     if (reloadTimer) {
       window.clearTimeout(reloadTimer)
@@ -59,7 +59,7 @@
         await nextTick()
         reloadFlag.value = true
       } else {
-        const title = route.meta.title
+        const title = route.meta.title as string
         router.push({ name: 'Reload', params: { title } })
       }
     }, 400)

@@ -10,7 +10,7 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
   import { useRouterStore } from '@/pinia/modules/router'
   const routerStore = useRouterStore()
 

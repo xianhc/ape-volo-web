@@ -33,12 +33,12 @@
       <CrudOpts :perms="perms" />
       <el-table
         ref="tableRef"
-        :data="data"
         v-loading="loading"
-        @selection-change="onSelectionChange"
-        @sort-change="onSortChange"
+        :data="data"
         style="width: 100%"
         row-key="id"
+        @selection-change="onSelectionChange"
+        @sort-change="onSortChange"
       >
         <el-table-column align="left" type="selection" width="55" />
         <el-table-column
@@ -56,10 +56,7 @@
         <el-table-column
           align="left"
           prop="dataScopeType"
-          :formatter="
-            (row, column, cellValue) =>
-              showDictLabel(dataScopeTypeOption, cellValue)
-          "
+          :formatter="formatDataScope"
           label="数据权限"
           sortable="custom"
         />
@@ -77,7 +74,7 @@
           sortable="custom"
         />
         <el-table-column align="left" label="操作">
-          <template v-slot="scope">
+          <template #default="scope">
             <RowOpts :row="scope.row" :val="scope.row.name" :perms="perms">
               <template #left>
                 <el-button
@@ -86,7 +83,8 @@
                   type="primary"
                   link
                   @click="handleOpenAuthorizeDialog(scope.row.id)"
-                  >设置权限
+                >
+                  设置权限
                 </el-button>
               </template>
             </RowOpts>
@@ -103,17 +101,18 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
   import { add, edit, del, get, download } from '@/api/permission/role'
+  import type { RoleQueryParams } from '@/api/permission/types/role.types'
   import { ref } from 'vue'
   import formPanel from './module/formPanel.vue'
   import authorizePanel from './module/authorizePanel.vue'
-  import DateRangePicker from '@/components/CRUD/DateRangePicker.vue'
-  import { getDict, showDictLabel } from '@/utils/dictionary'
+  import DateRangePicker from '@/components/Crud/DateRangePicker.vue'
+  import { getDict, showDictLabel, type DictOption } from '@/utils/dictionary'
   import { useCrud } from '@/components/Crud/UseCrud'
-  import CrudOpts from '@/components/CRUD/CrudOpts.vue'
-  import RowOpts from '@/components/CRUD/RowOpts.vue'
-  import SearchOpts from '@/components/CRUD/SearchOpts.vue'
+  import CrudOpts from '@/components/Crud/CrudOpts.vue'
+  import RowOpts from '@/components/Crud/RowOpts.vue'
+  import SearchOpts from '@/components/Crud/SearchOpts.vue'
 
   defineOptions({
     name: 'Role'
@@ -127,8 +126,14 @@
   }
 
   // 数据权限
-  const dataScopeTypeOption = ref([])
-  const searchInfo = ref({})
+  const dataScopeTypeOption = ref<DictOption[]>([])
+
+  // 格式化数据权限
+  const formatDataScope = (_row: any, _column: any, cellValue: any) => {
+    return showDictLabel(dataScopeTypeOption.value, cellValue)
+  }
+
+  const searchInfo = ref<RoleQueryParams>({})
   const {
     data,
     loading,
@@ -146,11 +151,11 @@
     },
     defaultForm: () => ({
       id: 0,
-      name: null,
-      authCode: null,
+      name: undefined,
+      authCode: undefined,
       deptIdArray: [],
-      description: null,
-      dataScopeType: null,
+      description: undefined,
+      dataScopeType: undefined,
       level: 999
     }),
     searchInfo
@@ -164,8 +169,8 @@
       console.error('获取 data_scope_type 失败:', err)
     })
 
-  const authorizeRef = ref(null)
-  const handleOpenAuthorizeDialog = (id) => {
-    authorizeRef.value.openAuthorizeDialog(id) // 调用子组件方法并传递行对象
+  const authorizeRef = ref<any>(null)
+  const handleOpenAuthorizeDialog = (id: string) => {
+    authorizeRef.value?.openAuthorizeDialog(id) // 调用子组件方法并传递行对象
   }
 </script>

@@ -36,8 +36,8 @@
                   : 'text-gray-600 dark:text-slate-400'
               "
             />
-            {{ fmtTitle(item.meta.title, item) }}</span
-          >
+            {{ getFormattedTitle(item) }}
+          </span>
         </template>
       </el-tab-pane>
     </el-tabs>
@@ -55,27 +55,42 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
   import { emitter } from '@/utils/bus.js'
   import { onBeforeUnmount, ref, watch } from 'vue'
   import { useRoute, useRouter } from 'vue-router'
   import { fmtTitle } from '@/utils/index'
   import setting from '@/setting'
+  import type { TabsPaneContext } from 'element-plus'
 
   defineOptions({
     name: 'HistoryComponent'
   })
+
+  interface HistoryItem {
+    name: string
+    meta: {
+      title: string
+      icon?: string
+      closeTab?: boolean
+      matched?: any
+    }
+  }
 
   const route = useRoute()
   const router = useRouter()
 
   const defaultRouter = setting.defaultRouter
 
-  const getFmtString = (item) => {
+  const getFmtString = (item: any) => {
     return item.name
   }
 
-  const historys = ref([])
+  const getFormattedTitle = (item: HistoryItem) => {
+    return fmtTitle(item.meta.title, item as any)
+  }
+
+  const historys = ref<HistoryItem[]>([])
   const activeValue = ref('')
   const contextMenuVisible = ref(false)
 
@@ -90,8 +105,8 @@
   }
 
   const rebuildHistoryMap = () => {
-    historyMap.value = {}
-    historys.value.forEach((item) => {
+    historyMap.value = {} as Record<string, HistoryItem>
+    historys.value.forEach((item: HistoryItem) => {
       historyMap.value[getFmtString(item)] = item
     })
   }
@@ -102,7 +117,7 @@
     emitter.emit('setKeepAlive', historys.value)
   }
 
-  const getTabNameFromEvent = (event) => {
+  const getTabNameFromEvent = (event: Event) => {
     const target = event?.target
     if (!(target instanceof Element)) return ''
     const tabEl = target.closest?.('[id^="tab-"]')
@@ -110,7 +125,7 @@
     return id && id.startsWith('tab-') ? id.slice(4) : ''
   }
 
-  const openContextMenu = (e) => {
+  const openContextMenu = (e: MouseEvent) => {
     if (historys.value.length === 1 && route.name === defaultRouter) {
       return false
     }
@@ -180,12 +195,13 @@
     contextMenuVisible.value = false
     commitHistorys()
   }
-  const setTab = (route) => {
+  const setTab = (route: any) => {
     if (!route?.name) return
-    if (!historys.value.some((item) => item.name === route.name)) {
-      const obj = {}
-      obj.name = route.name
-      obj.meta = { ...route.meta }
+    if (!historys.value.some((item: any) => item.name === route.name)) {
+      const obj: HistoryItem = {
+        name: route.name,
+        meta: { ...route.meta }
+      }
       delete obj.meta.matched
       historys.value.push(obj)
     }
@@ -193,9 +209,9 @@
     sessionStorage.setItem('activeValue', activeValue.value)
   }
 
-  const historyMap = ref({})
+  const historyMap = ref<Record<string, HistoryItem>>({})
 
-  const changeTab = (TabsPaneContext) => {
+  const changeTab = (TabsPaneContext: TabsPaneContext) => {
     const name = TabsPaneContext?.props?.name
     if (!name) return
     const tab = historyMap.value[name]
@@ -204,7 +220,7 @@
       name: tab.name
     })
   }
-  const removeTab = (tab) => {
+  const removeTab = (tab: string) => {
     const index = historys.value.findIndex((item) => getFmtString(item) === tab)
     if (index < 0) return
     if (getFmtString(route) === tab) {
@@ -248,7 +264,7 @@
       if (route.name === 'Login' || route.name === 'Reload') {
         return
       }
-      historys.value = historys.value.filter((item) => !item.meta.closeTab)
+      historys.value = historys.value.filter((item: any) => !item.meta.closeTab)
       setTab(route)
       commitHistorys()
     },
@@ -266,7 +282,7 @@
       }
     ]
     historys.value =
-      JSON.parse(sessionStorage.getItem('historys')) || initHistorys
+      JSON.parse(sessionStorage.getItem('historys') || '[]') || initHistorys
     if (route.name !== 'Login' && route.name !== 'Reload') {
       setTab(route)
     }
@@ -278,7 +294,7 @@
   }
   initPage()
 
-  const middleCloseTab = (e) => {
+  const middleCloseTab = (e: MouseEvent) => {
     if (historys.value.length === 1 && route.name === defaultRouter) {
       return false
     }

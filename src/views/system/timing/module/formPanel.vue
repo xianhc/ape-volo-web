@@ -10,9 +10,9 @@
         <span class="text-lg">{{ getFormTitle() }}</span>
         <div>
           <el-button @click="closeDialog">取消</el-button>
-          <el-button type="primary" :loading="loading" @click="handleSave"
-            >保存</el-button
-          >
+          <el-button type="primary" :loading="loading" @click="handleSave">
+            保存
+          </el-button>
         </div>
       </div>
     </template>
@@ -33,9 +33,9 @@
       <el-form-item label="作业模式" prop="triggerType">
         <el-radio-group v-model="form.triggerType" @change="handleRadioChange">
           <el-radio
-            border
             v-for="item in props.taskTriggerTypeOption"
             :key="item.id"
+            border
             :value="Number(item.value)"
           >
             {{ item.label }}
@@ -114,16 +114,16 @@
       </el-form-item>
       <el-form-item label="开始时间" prop="startTime">
         <el-date-picker
-          style="width: 100%"
           v-model="form.startTime"
+          style="width: 100%"
           type="datetime"
           placeholder="请选择"
         />
       </el-form-item>
       <el-form-item label="结束时间" prop="endTime">
         <el-date-picker
-          style="width: 100%"
           v-model="form.endTime"
+          style="width: 100%"
           type="datetime"
           placeholder="请选择"
         />
@@ -131,10 +131,10 @@
       <el-form-item label="是否启用" prop="enabled">
         <el-radio-group v-model="form.enabled">
           <el-radio
-            border
             v-for="item in props.statusTypeOption"
             :key="item.id"
-            :value="strToBool(item.value)"
+            border
+            :value="strToBool(String(item.value))"
           >
             {{ item.label }}
           </el-radio>
@@ -171,24 +171,19 @@
     </el-form>
   </el-drawer>
 </template>
-<script setup>
+<script setup lang="ts">
   import { ref, inject, computed } from 'vue'
   import { useAppStore } from '@/pinia'
   import { strToBool } from '@/utils/converter'
   import { QuestionFilled } from '@element-plus/icons-vue'
+  import type { DictOption } from '@/utils/dictionary'
 
   const appStore = useAppStore()
 
-  const props = defineProps({
-    statusTypeOption: {
-      type: Array,
-      required: true
-    },
-    taskTriggerTypeOption: {
-      type: Array,
-      required: true
-    }
-  })
+  const props = defineProps<{
+    statusTypeOption: DictOption[]
+    taskTriggerTypeOption: DictOption[]
+  }>()
 
   const handleRadioChange = () => {
     if (form.value.triggerType === 1) {
@@ -200,7 +195,7 @@
   }
 
   // 注入crud
-  const crud = inject('crud')
+  const crud = inject<any>('crud')
   const {
     form,
     dialogVisible,
@@ -212,7 +207,7 @@
 
   const timingForm = ref(null)
   const dynamicRules = computed(() => {
-    const baseRules = {
+    const baseRules: Record<string, any> = {
       taskName: [
         { required: true, message: '请输入任务名称', trigger: 'blur' }
       ],

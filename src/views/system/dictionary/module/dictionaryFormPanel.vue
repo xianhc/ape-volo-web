@@ -7,15 +7,12 @@
     width="600px"
   >
     <el-form ref="dictForm" :model="form" :rules="rules" label-width="80px">
-      <el-form-item
-        label="字典类型"
-        prop="dictType"
-      >
+      <el-form-item label="字典类型" prop="dictType">
         <el-radio
-          border
           v-for="item in props.dictTypeOption"
           :key="item.id"
           v-model="form.dictType"
+          border
           :label="Number(item.value)"
         >
           {{ item.label }}
@@ -36,25 +33,31 @@
     <template #footer>
       <div>
         <el-button @click="closeDialog">取消</el-button>
-        <el-button type="primary" :loading="loading" @click="handleSave">保存</el-button>
+        <el-button type="primary" :loading="loading" @click="handleSave">
+          保存
+        </el-button>
       </div>
     </template>
   </el-dialog>
 </template>
-<script setup>
+<script setup lang="ts">
   import { ref, inject } from 'vue'
+  import type { DictOption } from '@/utils/dictionary'
 
-
-  const props = defineProps({
-    dictTypeOption: {
-      type: Array,
-      required: true
-    }
-  })
+  const props = defineProps<{
+    dictTypeOption: DictOption[]
+  }>()
 
   // 注入crud
-  const crud = inject('crud')
-  const { form, dialogVisible, loading, closeDialog, validateAndSave, getFormTitle } = crud
+  const crud = inject<any>('crud')
+  const {
+    form,
+    dialogVisible,
+    loading,
+    closeDialog,
+    validateAndSave,
+    getFormTitle
+  } = crud
 
   const dictForm = ref(null)
   const rules = ref({
@@ -64,5 +67,3 @@
   // 验证表单并保存
   const handleSave = () => validateAndSave(dictForm.value)
 </script>
-
-

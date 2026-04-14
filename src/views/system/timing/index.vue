@@ -34,16 +34,16 @@
       <CrudOpts :perms="perms" />
       <el-table
         ref="tableRef"
-        :data="data"
         v-loading="loading"
-        @selection-change="onSelectionChange"
-        @sort-change="onSortChange"
+        :data="data"
         row-key="id"
         :preserve-expanded-content="true"
         style="width: 100%"
+        @selection-change="onSelectionChange"
+        @sort-change="onSortChange"
       >
         <el-table-column type="expand">
-          <template v-slot="scope">
+          <template #default="scope">
             <div class="expand-detail">
               <p style="margin: 6px 0; padding: 2px 12px">
                 分组: {{ scope.row.taskGroup }}
@@ -74,17 +74,14 @@
         <el-table-column prop="principal" label="任务负责人" />
         <el-table-column
           prop="triggerType"
-          :formatter="
-            (row, column, cellValue) =>
-              showDictLabel(taskTriggerTypeOption, cellValue)
-          "
+          :formatter="triggerTypeFormatter"
           label="类型"
           sortable="custom"
         />
         <el-table-column prop="corn" label="corn" />
         <el-table-column prop="runTimes" label="已执行次数" sortable="custom" />
         <el-table-column prop="enabled" label="DB状态" sortable="custom">
-          <template v-slot="scope">
+          <template #default="scope">
             <el-switch
               v-model="scope.row.enabled"
               inline-prompt
@@ -97,17 +94,14 @@
         </el-table-column>
         <el-table-column
           prop="triggerState"
-          :formatter="
-            (row, column, cellValue) =>
-              showDictLabel(taskTriggerStateOption, cellValue)
-          "
+          :formatter="triggerStateFormatter"
           label="RAM状态"
         />
         <el-table-column prop="createTime" label="开始时间" sortable="custom" />
         <el-table-column prop="createTime" label="结束时间" sortable="custom" />
         <el-table-column prop="createTime" label="创建时间" sortable="custom" />
         <el-table-column :min-width="120" label="操作">
-          <template v-slot="scope">
+          <template #default="scope">
             <RowOpts :row="scope.row" :val="scope.row.name" :perms="perms">
               <template #right>
                 <el-button
@@ -152,7 +146,7 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
   import {
     del,
     edit,
@@ -163,15 +157,16 @@
     resume,
     download
   } from '@/api/system/timing'
+  import type { TimingQueryParams } from '@/api/system/types/timing.types'
   import { reactive, ref } from 'vue'
   import { ElMessage, ElMessageBox } from 'element-plus'
   import formPanel from './module/formPanel.vue'
-  import DateRangePicker from '@/components/CRUD/DateRangePicker.vue'
-  import { getDict, showDictLabel } from '@/utils/dictionary'
+  import DateRangePicker from '@/components/Crud/DateRangePicker.vue'
+  import { getDict, showDictLabel, type DictOption } from '@/utils/dictionary'
   import { useCrud } from '@/components/Crud/UseCrud'
-  import CrudOpts from '@/components/CRUD/CrudOpts.vue'
-  import RowOpts from '@/components/CRUD/RowOpts.vue'
-  import SearchOpts from '@/components/CRUD/SearchOpts.vue'
+  import CrudOpts from '@/components/Crud/CrudOpts.vue'
+  import RowOpts from '@/components/Crud/RowOpts.vue'
+  import SearchOpts from '@/components/Crud/SearchOpts.vue'
 
   defineOptions({
     name: 'Timing'
@@ -184,14 +179,24 @@
     download: ['sys:timing:download']
   }
 
-  const searchInfo = ref({})
+  const searchInfo = ref<TimingQueryParams>({})
 
   // 状态
-  const statusTypeOption = ref([])
+  const statusTypeOption = ref<DictOption[]>([])
   // 作业触发器类型
-  const taskTriggerTypeOption = ref([])
+  const taskTriggerTypeOption = ref<DictOption[]>([])
   // 作业触发器状态
-  const taskTriggerStateOption = ref([])
+  const taskTriggerStateOption = ref<DictOption[]>([])
+
+  // 触发器类型 formatter
+  const triggerTypeFormatter = (_row: any, _column: any, cellValue: any) => {
+    return showDictLabel(taskTriggerTypeOption.value, cellValue)
+  }
+
+  // 触发器状态 formatter
+  const triggerStateFormatter = (_row: any, _column: any, cellValue: any) => {
+    return showDictLabel(taskTriggerStateOption.value, cellValue)
+  }
 
   const {
     data,
@@ -211,22 +216,22 @@
     },
     defaultForm: () => ({
       id: 0,
-      taskGroup: null,
-      assemblyName: null,
-      taskName: null,
-      description: null,
-      className: null,
-      cron: null,
-      principal: null,
-      alertEmail: null,
-      startTime: null,
-      endTime: null,
+      taskGroup: undefined,
+      assemblyName: undefined,
+      taskName: undefined,
+      description: undefined,
+      className: undefined,
+      cron: undefined,
+      principal: undefined,
+      alertEmail: undefined,
+      startTime: undefined,
+      endTime: undefined,
       triggerType: 1,
       pauseAfterFailure: false,
       enabled: true,
-      runParams: null,
-      intervalSecond: null,
-      cycleRunTimes: null
+      runParams: undefined,
+      intervalSecond: undefined,
+      cycleRunTimes: undefined
     }),
     searchInfo
   })
@@ -239,8 +244,8 @@
 
   init()
 
-  const loadingMap = reactive({})
-  const changeEnabled = async (row, val) => {
+  const loadingMap = reactive<Record<string | number, boolean>>({})
+  const changeEnabled = async (row: any, val: boolean) => {
     loadingMap[row.id] = true
     ElMessageBox.confirm(
       `你要将${row.taskName}的状态切换为【${val ? '启用' : '禁用'}】吗？`,
@@ -266,7 +271,7 @@
       })
   }
 
-  const runningTask = async (id) => {
+  const runningTask = async (id: string) => {
     execution(id)
       .then(() => {
         ElMessage({
@@ -278,7 +283,7 @@
       .catch(() => {})
   }
 
-  const pauseTask = async (row) => {
+  const pauseTask = async (row: any) => {
     ElMessageBox.confirm(`你要将${row.taskName}的暂停吗？`, '提示', {
       confirmButtonText: '确定',
       cancelButtonText: '取消',
@@ -296,7 +301,7 @@
       .catch(() => {})
   }
 
-  const resumeTask = async (id) => {
+  const resumeTask = async (id: string) => {
     resume(id)
       .then(() => {
         ElMessage({

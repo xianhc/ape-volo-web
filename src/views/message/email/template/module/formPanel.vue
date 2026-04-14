@@ -10,9 +10,9 @@
         <span class="text-lg">{{ getFormTitle() }}</span>
         <div>
           <el-button @click="closeDialog">取消</el-button>
-          <el-button type="primary" :loading="loading" @click="handleSave"
-            >保存</el-button
-          >
+          <el-button type="primary" :loading="loading" @click="handleSave">
+            保存
+          </el-button>
         </div>
       </div>
     </template>
@@ -34,8 +34,8 @@
       </el-form-item>
       <el-form-item label="发送邮箱" prop="emailAccountId">
         <el-select
-          style="width: 100%"
           v-model="form.emailAccountId"
+          style="width: 100%"
           clearable
           filterable
           placeholder="请选择"
@@ -50,11 +50,11 @@
       </el-form-item>
       <el-form-item label="状态" prop="enabled">
         <el-radio
-          border
           v-for="item in props.statusTypeOption"
           :key="item.id"
           v-model="form.enabled"
-          :value="strToBool(item.value)"
+          border
+          :value="strToBool(String(item.value))"
         >
           {{ item.label }}
         </el-radio>
@@ -80,23 +80,19 @@
     </el-form>
   </el-drawer>
 </template>
-<script setup>
+<script setup lang="ts">
   import { ref, inject } from 'vue'
   import { strToBool } from '@/utils/converter'
+  import type { EmailAccount } from '@/api/message/email/emailAccount'
+  import type { DictOption } from '@/utils/dictionary'
 
-  const props = defineProps({
-    statusTypeOption: {
-      type: Array,
-      required: true
-    },
-    emailAccountOption: {
-      type: Array,
-      required: true
-    }
-  })
+  const props = defineProps<{
+    statusTypeOption: DictOption[]
+    emailAccountOption: EmailAccount[]
+  }>()
 
   // 注入crud
-  const crud = inject('crud')
+  const crud = inject<any>('crud')
   const {
     form,
     dialogVisible,

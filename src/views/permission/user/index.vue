@@ -24,13 +24,13 @@
         </el-form-item>
         <el-form-item label="用户名">
           <el-input
-            v-model="searchInfo.userName"
+            v-model="searchInfo.username"
             placeholder="请输入"
             clearable
           />
         </el-form-item>
         <el-form-item label="昵称">
-          <el-input v-model="searchInfo.nickName" placeholder="请输入" />
+          <el-input v-model="searchInfo.nickname" placeholder="请输入" />
         </el-form-item>
         <el-form-item label="状态">
           <el-select
@@ -69,12 +69,12 @@
       <CrudOpts :perms="perms" />
       <el-table
         ref="tableRef"
-        :data="data"
         v-loading="loading"
-        @selection-change="onSelectionChange"
-        @sort-change="onSortChange"
+        :data="data"
         style="width: 100%"
         row-key="id"
+        @selection-change="onSelectionChange"
+        @sort-change="onSortChange"
       >
         <el-table-column
           align="left"
@@ -114,9 +114,7 @@
           align="left"
           min-width="20"
           prop="genderCode"
-          :formatter="
-            (row, column, cellValue) => showDictLabel(genderOption, cellValue)
-          "
+          :formatter="formatGender"
           label="性别"
         />
 
@@ -129,23 +127,23 @@
           <template #default="scope">
             <el-select
               v-model="scope.row.roles"
-              @visible-change="
-                (flag) => {
-                  visibleChangeRole(scope.row, flag)
-                }
-              "
-              @remove-tag="(removed) => deleteRole(scope.row, removed)"
               value-key="id"
               multiple
               collapse-tags
               collapse-tags-tooltip
               placeholder="请选择"
+              @visible-change="
+                (flag: any) => handleRoleVisibleChange(scope.row, flag)
+              "
+              @remove-tag="(flag: any) => handleRoleRemove(scope.row, flag)"
             >
               <el-option
                 v-for="item in allRoleData"
                 :key="item.id"
                 :disabled="
-                  roleLevel.value !== 1 && item.level <= roleLevel.value
+                  roleLevel !== 1 &&
+                  item.level != null &&
+                  item.level <= roleLevel
                 "
                 :label="item.name"
                 :value="item"
@@ -157,17 +155,15 @@
           <template #default="scope">
             <el-select
               v-model="scope.row.jobs"
-              @visible-change="
-                (flag) => {
-                  visibleChangeJob(scope.row, flag)
-                }
-              "
-              @remove-tag="(removed) => deleteJob(scope.row, removed)"
               value-key="id"
               multiple
               collapse-tags
               collapse-tags-tooltip
               placeholder="请选择"
+              @visible-change="
+                (flag: any) => handleJobVisibleChange(scope.row, flag)
+              "
+              @remove-tag="(flag: any) => handleJobRemove(scope.row, flag)"
             >
               <el-option
                 v-for="item in allJobData"
@@ -184,13 +180,13 @@
           prop="enabled"
           label="状态"
         >
-          <template v-slot="scope">
+          <template #default="scope">
             <el-switch
               v-model="scope.row.enabled"
               inline-prompt
               :loading="loadingMap[scope.row.id]"
-              :active-text="showDictLabel(statusOption, 'true')"
-              :inactive-text="showDictLabel(statusOption, 'false')"
+              :active-text="showDictLabel(statusTypeOption, 'true')"
+              :inactive-text="showDictLabel(statusTypeOption, 'false')"
               @change="changeEnabled(scope.row, scope.row.enabled)"
             />
           </template>
@@ -207,7 +203,7 @@
           label="创建时间"
         />
         <el-table-column align="left" label="操作">
-          <template v-slot="scope">
+          <template #default="scope">
             <RowOpts :row="scope.row" :val="scope.row.name" :perms="perms" />
           </template>
         </el-table-column>
@@ -216,7 +212,7 @@
     </div>
     <!--表单渲染-->
     <formPanel
-      :genderOption="genderOption"
+      :gender-option="genderOption"
       :status-type-option="statusTypeOption"
       :department-option="departmentOption"
       :job-option="allJobData"
@@ -226,9 +222,9 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
   import { nextTick, ref, reactive } from 'vue'
-  import { getDict, showDictLabel } from '@/utils/dictionary'
+  import { getDict, showDictLabel, type DictOption } from '@/utils/dictionary'
   import { ElMessage, ElMessageBox } from 'element-plus'
   import formPanel from './module/formPanel.vue'
   import {
@@ -240,16 +236,21 @@
     get,
     download
   } from '@/api/permission/user'
-  import { getAll as getAllRole, getLevel } from '@/api/permission/role'
-  import { getAll as getAllJob } from '@/api/permission/job'
-  import { getAll as getAllTenant } from '@/api/system/tenant'
-  import { getDeptTree } from '@/api/permission/department'
-  import DateRangePicker from '@/components/CRUD/DateRangePicker.vue'
+  import type { UserQueryParams } from '@/api/permission/types/user.types'
+  import {
+    getAll as getAllRole,
+    getLevel,
+    type Role
+  } from '@/api/permission/role'
+  import { getAll as getAllJob, type Job } from '@/api/permission/job'
+  import { getAll as getAllTenant, type Tenant } from '@/api/system/tenant'
+  import { getDeptTree, type Department } from '@/api/permission/department'
+  import DateRangePicker from '@/components/Crud/DateRangePicker.vue'
   import { useCrud } from '@/components/Crud/UseCrud'
   import { useUserStore } from '@/pinia/modules/user'
-  import CrudOpts from '@/components/CRUD/CrudOpts.vue'
-  import RowOpts from '@/components/CRUD/RowOpts.vue'
-  import SearchOpts from '@/components/CRUD/SearchOpts.vue'
+  import CrudOpts from '@/components/Crud/CrudOpts.vue'
+  import RowOpts from '@/components/Crud/RowOpts.vue'
+  import SearchOpts from '@/components/Crud/SearchOpts.vue'
 
   defineOptions({
     name: 'User'
@@ -263,19 +264,23 @@
   }
 
   //字典
-  const statusTypeOption = ref([])
-  const genderOption = ref([])
-  const departmentOption = ref([])
+  const statusTypeOption = ref<DictOption[]>([])
+  const genderOption = ref<DictOption[]>([])
+  const departmentOption = ref<Department[]>([])
+
+  const formatGender = (_row: any, _column: any, cellValue: any) => {
+    return showDictLabel(genderOption.value, cellValue)
+  }
 
   //角色
-  const allRoleData = ref([])
-  const roleLevel = ref(0)
+  const allRoleData = ref<Role[]>([])
+  const roleLevel = ref<number>(0)
   //岗位
-  const allJobData = ref([])
-  //岗位
-  const allTenantData = ref([])
+  const allJobData = ref<Job[]>([])
+  //租户
+  const allTenantData = ref<Tenant[]>([])
 
-  const searchInfo = ref({})
+  const searchInfo = ref<UserQueryParams>({})
   const {
     data,
     loading,
@@ -293,16 +298,16 @@
     },
     defaultForm: () => ({
       id: 0,
-      userName: null,
-      nickName: null,
+      userName: undefined,
+      nickName: undefined,
       genderCode: 1,
-      email: null,
+      email: undefined,
       enabled: true,
       roles: [],
       jobs: [],
       dept: { id: null },
       phone: '',
-      tenantId: null
+      tenantId: undefined
     }),
     searchInfo
   })
@@ -315,7 +320,7 @@
     const resRole = await getAllRole()
     allRoleData.value = resRole.data
     const resLevel = await getLevel()
-    roleLevel.value = resLevel.data.level
+    roleLevel.value = resLevel.data
     const resJob = await getAllJob()
     allJobData.value = resJob.data
     const resTenant = await getAllTenant()
@@ -324,24 +329,24 @@
 
   init()
 
-  const oldRolesMap = {} //原始数据 操作失败后恢复
-  const visibleChangeRole = async (row, flag) => {
+  const oldRolesMap: Record<string | number, any[]> = {} //原始数据 操作失败后恢复
+  const visibleChangeRole = async (row: any, flag: boolean) => {
     if (flag) {
-      oldRolesMap[row.id] = row.roles.map((r) => ({ ...r }))
+      oldRolesMap[row.id] = row.roles.map((r: any) => ({ ...r }))
     } else {
       await nextTick()
       const oldIds = (oldRolesMap[row.id] || [])
-        .map((r) => r.id)
+        .map((r: any) => r.id)
         .sort()
         .join(',')
       const newIds = (row.roles || [])
-        .map((r) => r.id)
+        .map((r: any) => r.id)
         .sort()
         .join(',')
       if (oldIds !== newIds) {
         await editUserRole({
           id: row.id,
-          roleIdArray: row.roles.map((item) => item.id)
+          roleIdArray: row.roles.map((item: any) => item.id)
         })
           .then(() => {
             delete oldRolesMap[row.id]
@@ -355,11 +360,11 @@
     }
   }
 
-  const deleteRole = async (row, removed) => {
-    oldRolesMap[row.id] = [...row.roles, removed].map((r) => ({ ...r }))
+  const deleteRole = async (row: any, removed: any) => {
+    oldRolesMap[row.id] = [...row.roles, removed].map((r: any) => ({ ...r }))
     editUserRole({
       id: row.id,
-      roleIdArray: row.roles.map((item) => item.id)
+      roleIdArray: row.roles.map((item: any) => item.id)
     })
       .then(() => {
         delete oldRolesMap[row.id]
@@ -371,24 +376,24 @@
       })
   }
 
-  const oldJobsMap = {} //原始数据 操作失败后恢复
-  const visibleChangeJob = async (row, flag) => {
+  const oldJobsMap: Record<string | number, any[]> = {} //原始数据 操作失败后恢复
+  const visibleChangeJob = async (row: any, flag: boolean) => {
     if (flag) {
-      oldJobsMap[row.id] = row.jobs.map((j) => ({ ...j }))
+      oldJobsMap[row.id] = row.jobs.map((j: any) => ({ ...j }))
     } else {
       await nextTick()
       const oldIds = (oldJobsMap[row.id] || [])
-        .map((j) => j.id)
+        .map((j: any) => j.id)
         .sort()
         .join(',')
       const newIds = (row.jobs || [])
-        .map((j) => j.id)
+        .map((j: any) => j.id)
         .sort()
         .join(',')
       if (oldIds !== newIds) {
         await editUserJob({
           id: row.id,
-          jobIdArray: row.jobs.map((item) => item.id)
+          jobIdArray: row.jobs.map((item: any) => item.id)
         })
           .then(() => {
             delete oldJobsMap[row.id]
@@ -402,11 +407,11 @@
     }
   }
 
-  const deleteJob = async (row, removed) => {
-    oldJobsMap[row.id] = [...row.jobs, removed].map((j) => ({ ...j }))
+  const deleteJob = async (row: any, removed: any) => {
+    oldJobsMap[row.id] = [...row.jobs, removed].map((j: any) => ({ ...j }))
     editUserJob({
       id: row.id,
-      jobIdArray: row.jobs.map((item) => item.id)
+      jobIdArray: row.jobs.map((item: any) => item.id)
     })
       .then(() => {
         delete oldJobsMap[row.id]
@@ -418,8 +423,24 @@
       })
   }
 
-  const loadingMap = reactive({})
-  const changeEnabled = async (row, val) => {
+  const handleRoleVisibleChange = (row: any, flag: boolean) => {
+    visibleChangeRole(row, flag)
+  }
+
+  const handleRoleRemove = (row: any, removed: any) => {
+    deleteRole(row, removed)
+  }
+
+  const handleJobVisibleChange = (row: any, flag: boolean) => {
+    visibleChangeJob(row, flag)
+  }
+
+  const handleJobRemove = (row: any, removed: any) => {
+    deleteJob(row, removed)
+  }
+
+  const loadingMap = reactive<Record<string | number, boolean>>({})
+  const changeEnabled = async (row: any, val: boolean) => {
     loadingMap[row.id] = true
     ElMessageBox.confirm(
       `你要将${row.userName}的状态切换为【${val ? '启用' : '禁用'}】吗？`,
@@ -446,7 +467,7 @@
   }
 
   const userStore = useUserStore()
-  const checkboxT = (row) => {
+  const checkboxT = (row: any) => {
     return row.id !== userStore.userInfo.id
   }
 </script>

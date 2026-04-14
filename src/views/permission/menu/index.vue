@@ -33,14 +33,14 @@
       <CrudOpts :perms="perms" />
       <el-table
         ref="tableRef"
-        :data="data"
         v-loading="loading"
-        @selection-change="onSelectionChange"
-        @sort-change="onSortChange"
-        row-key="id"
+        :data="data"
         lazy
+        row-key="id"
         :load="GetChildren"
         :tree-props="{ children: 'children', hasChildren: 'hasChildren' }"
+        @selection-change="onSelectionChange"
+        @sort-change="onSortChange"
       >
         <el-table-column
           align="left"
@@ -58,9 +58,7 @@
         <el-table-column
           align="left"
           prop="menuType"
-          :formatter="
-            (row, column, cellValue) => showDictLabel(menuTypeOption, cellValue)
-          "
+          :formatter="formatMenuType"
           label="类型"
           sortable="custom"
         />
@@ -96,7 +94,7 @@
           label="状态"
           sortable="custom"
         >
-          <template v-slot="scope">
+          <template #default="scope">
             <el-switch
               v-model="scope.row.enabled"
               inline-prompt
@@ -112,7 +110,7 @@
           label="是否缓存"
           sortable="custom"
         >
-          <template v-slot="scope">
+          <template #default="scope">
             <el-switch v-model="scope.row.keepAlive" :disabled="true" />
           </template>
         </el-table-column>
@@ -122,7 +120,7 @@
           label="是否隐藏"
           sortable="custom"
         >
-          <template v-slot="scope">
+          <template #default="scope">
             <el-switch v-model="scope.row.hidden" :disabled="true" />
           </template>
         </el-table-column>
@@ -140,15 +138,15 @@
           sortable="custom"
         />
         <el-table-column align="left" :min-width="160" label="操作">
-          <template v-slot="scope">
+          <template #default="scope">
             <RowOpts :row="scope.row" :val="scope.row.name" :perms="perms">
               <template #left>
                 <el-button
+                  v-show="scope.row.menuType !== 3"
                   v-has-perm="perms.add"
                   type="primary"
                   link
                   icon="plus"
-                  v-show="scope.row.menuType !== 3"
                   @click="toAdd({ parentId: scope.row.id })"
                 >
                   新增下级
@@ -169,16 +167,17 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
   import { add, edit, del, get, download } from '@/api/permission/menu'
+  import type { MenuQueryParams } from '@/api/permission/types/menu.types'
   import { ref } from 'vue'
   import formPanel from './module/formPanel.vue'
-  import DateRangePicker from '@/components/CRUD/DateRangePicker.vue'
-  import { getDict, showDictLabel } from '@/utils/dictionary'
+  import DateRangePicker from '@/components/Crud/DateRangePicker.vue'
+  import { getDict, showDictLabel, type DictOption } from '@/utils/dictionary'
   import { useCrud } from '@/components/Crud/UseCrud'
-  import CrudOpts from '@/components/CRUD/CrudOpts.vue'
-  import RowOpts from '@/components/CRUD/RowOpts.vue'
-  import SearchOpts from '@/components/CRUD/SearchOpts.vue'
+  import CrudOpts from '@/components/Crud/CrudOpts.vue'
+  import RowOpts from '@/components/Crud/RowOpts.vue'
+  import SearchOpts from '@/components/Crud/SearchOpts.vue'
 
   defineOptions({
     name: 'Menus'
@@ -191,13 +190,19 @@
     download: ['sys:menu:download']
   }
 
-  const searchInfo = ref({})
+  const searchInfo = ref<MenuQueryParams>({})
   // 菜单类型
-  const menuTypeOption = ref([])
+  const menuTypeOption = ref<DictOption[]>([])
   // 徽章类型
-  const badgeTypeOption = ref([])
+  const badgeTypeOption = ref<DictOption[]>([])
   // 状态
-  const statusTypeOption = ref([])
+  const statusTypeOption = ref<DictOption[]>([])
+
+  // 格式化菜单类型
+  const formatMenuType = (_row: any, _column: any, cellValue: any) => {
+    return showDictLabel(menuTypeOption.value, cellValue)
+  }
+
   const {
     data,
     loading,
@@ -216,21 +221,21 @@
     },
     defaultForm: () => ({
       id: 0,
-      title: null,
+      title: undefined,
       sort: 999,
-      path: null,
-      component: null,
-      componentName: null,
+      path: undefined,
+      component: undefined,
+      componentName: undefined,
       parentId: 0,
       icon: '',
       keepAlive: false,
       hidden: false,
       menuType: 2,
       enabled: true,
-      authCode: null,
-      badgeType: null,
-      badgeText: null,
-      badgeStyle: null
+      authCode: undefined,
+      badgeType: undefined,
+      badgeText: undefined,
+      badgeStyle: undefined
     }),
     searchInfo
   })
@@ -243,7 +248,7 @@
 
   init()
 
-  function GetChildren(tree, treeNode, resolve) {
+  function GetChildren(tree: any, _treeNode: any, resolve: any) {
     const params = { parentId: tree.id }
     setTimeout(() => {
       get(params).then((res) => {

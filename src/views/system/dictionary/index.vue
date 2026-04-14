@@ -22,7 +22,7 @@
                   placeholder="请选择"
                 >
                   <el-option
-                    v-for="item in dictOptionType"
+                    v-for="item in dictTypeOption"
                     :key="item.value"
                     :label="item.label"
                     :value="item.value"
@@ -37,13 +37,13 @@
             <CrudOpts :perms="perms" />
             <el-table
               ref="tableRef"
-              highlight-current-row
-              :data="data"
               v-loading="loading"
-              @selection-change="onSelectionChange"
-              @sort-change="onSortChange"
+              :data="data"
+              highlight-current-row
               style="width: 100%"
               row-key="id"
+              @selection-change="onSelectionChange"
+              @sort-change="onSortChange"
               @row-click="handleDictionaryRowClick"
             >
               <el-table-column align="left" type="selection" width="55" />
@@ -51,10 +51,7 @@
                 align="left"
                 prop="dictType"
                 min-width="40"
-                :formatter="
-                  (row, column, cellValue) =>
-                    showDictLabel(dictTypeOption, cellValue)
-                "
+                :formatter="dictTypeFormatter"
                 label="字典类型"
                 sortable="custom"
               />
@@ -101,16 +98,17 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
   import { ref } from 'vue'
-  import { getDict, showDictLabel } from '@/utils/dictionary'
+  import { getDict, showDictLabel, type DictOption } from '@/utils/dictionary'
   import { get, del, add, edit, download } from '@/api/system/dictionary'
+  import type { DictionaryQueryParams } from '@/api/system/types/dictionary.types'
   import detailPanel from './detail.vue'
   import { useCrud } from '@/components/Crud/UseCrud'
   import dictionaryFormPanel from './module/dictionaryFormPanel.vue'
-  import CrudOpts from '@/components/CRUD/CrudOpts.vue'
-  import SearchOpts from '@/components/CRUD/SearchOpts.vue'
-  import RowOpts from '@/components/CRUD/RowOpts.vue'
+  import CrudOpts from '@/components/Crud/CrudOpts.vue'
+  import SearchOpts from '@/components/Crud/SearchOpts.vue'
+  import RowOpts from '@/components/Crud/RowOpts.vue'
 
   defineOptions({
     name: 'Dictionary'
@@ -126,9 +124,15 @@
   const selectedDictionaryId = ref(0)
   const selectedDictionaryName = ref('')
 
-  const searchInfo = ref({})
+  const searchInfo = ref<DictionaryQueryParams>({})
 
-  const dictTypeOption = ref([])
+  const dictTypeOption = ref<DictOption[]>([])
+
+  // 字典类型 formatter
+  const dictTypeFormatter = (_row: any, _column: any, cellValue: any) => {
+    return showDictLabel(dictTypeOption.value, cellValue)
+  }
+
   const {
     data,
     searchToggle,
@@ -147,8 +151,8 @@
     defaultForm: () => ({
       id: 0,
       dictType: 2,
-      name: null,
-      description: null
+      name: '',
+      description: ''
     }),
     searchInfo
   })
@@ -161,7 +165,7 @@
     })
 
   // 点击字典行事件
-  const handleDictionaryRowClick = async (row) => {
+  const handleDictionaryRowClick = async (row: any) => {
     selectedDictionaryId.value = row.id
     selectedDictionaryName.value = row.name
   }

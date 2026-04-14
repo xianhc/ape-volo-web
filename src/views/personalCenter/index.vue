@@ -1,8 +1,6 @@
 <template>
   <div class="ape-volo-bg p-4 lg:p-6 h-[calc(100vh-180px)] overflow-y-scroll">
-    <!-- 主要内容区 -->
     <div class="grid lg:grid-cols-12 md:grid-cols-1 gap-8">
-      <!-- 左侧信息栏 -->
       <div class="lg:col-span-3">
         <div class="ape-volo-content rounded-xl p-6 mb-6 profile-card">
           <h2 class="text-lg font-semibold mb-4 flex items-center gap-2">
@@ -114,8 +112,8 @@
         <div class="ape-volo-content rounded-xl p-6 profile-card">
           <el-tabs
             v-model="activeTab"
-            @tab-click="onTabClick"
             class="custom-tabs"
+            @tab-click="onTabClick"
           >
             <el-tab-pane name="profile">
               <template #label>
@@ -140,11 +138,12 @@
                   <el-form-item label="性别">
                     <el-radio-group v-model="userForm.genderCode">
                       <el-radio
-                        border
                         v-for="item in genderOption"
                         :key="item.id"
+                        border
                         :value="Number(item.value)"
-                        >{{ item.label }}
+                      >
+                        {{ item.label }}
                       </el-radio>
                     </el-radio-group>
                   </el-form-item>
@@ -154,8 +153,9 @@
                       :loading="loading"
                       :disabled="!formChanged"
                       @click="handleSave"
-                      >保存配置</el-button
                     >
+                      保存配置
+                    </el-button>
                   </el-form-item>
                 </el-form>
               </div>
@@ -170,29 +170,31 @@
               <div class="py-6">
                 <div class="ape-volo-table">
                   <el-table
-                    :data="tableData"
                     v-loading="tableLoading"
+                    :data="tableData"
                     style="width: 100%"
                     row-key="id"
                   >
                     <el-table-column prop="createTime" label="创建时间" />
                     <el-table-column prop="executionDuration" label="请求耗时">
-                      <template v-slot="scope">
+                      <template #default="scope">
                         <el-tag
                           v-if="scope.row.executionDuration <= 200"
                           type="success"
-                          >{{ scope.row.executionDuration }}ms
+                        >
+                          {{ scope.row.executionDuration }}ms
                         </el-tag>
-                        <el-tag v-else-if="scope.row.executionDuration <= 500"
-                          >{{ scope.row.executionDuration }}ms
+                        <el-tag v-else-if="scope.row.executionDuration <= 500">
+                          {{ scope.row.executionDuration }}ms
                         </el-tag>
                         <el-tag
                           v-else-if="scope.row.executionDuration <= 1000"
                           type="warning"
-                          >{{ scope.row.executionDuration }}ms
+                        >
+                          {{ scope.row.executionDuration }}ms
                         </el-tag>
-                        <el-tag v-else type="danger"
-                          >{{ scope.row.executionDuration }}ms
+                        <el-tag v-else type="danger">
+                          {{ scope.row.executionDuration }}ms
                         </el-tag>
                       </template>
                     </el-table-column>
@@ -205,11 +207,11 @@
                       :min-width="appStore.operateMinWith"
                       label="操作"
                     >
-                      <template v-slot="scope">
+                      <template #default="scope">
                         <el-button
-                          @click="showOperateLogDetail(scope.row)"
                           icon="view"
                           type="text"
+                          @click="showOperateLogDetail(scope.row)"
                         >
                           详情
                         </el-button>
@@ -319,10 +321,10 @@
       </div>
     </div>
     <!-- 修改密码对话框 -->
-    <updatePassPanel v-model:showUpdatePassPanel="showUpdatePassPanel" />
+    <updatePassPanel v-model:show-update-pass-panel="showUpdatePassPanel" />
 
     <!-- 修改邮箱对话框 -->
-    <updateEmailPanel v-model:showUpdateEmailPanel="showUpdateEmailPanel" />
+    <updateEmailPanel v-model:show-update-email-panel="showUpdateEmailPanel" />
 
     <!-- 修改头像 -->
     <el-dialog
@@ -330,9 +332,9 @@
       title="图片裁剪"
       width="1200px"
       append-to-body
-      @close="dialogVisible = false"
       :close-on-click-modal="false"
       draggable
+      @close="dialogVisible = false"
     >
       <div class="flex gap-[30px] h-[600px]">
         <!-- 左侧编辑区 -->
@@ -341,19 +343,19 @@
             <VueCropper
               ref="cropperRef"
               :img="imgSrc"
-              outputType="jpeg"
-              :autoCrop="true"
-              :autoCropWidth="cropWidth"
-              :autoCropHeight="cropHeight"
-              :fixedBox="false"
+              output-type="jpeg"
+              :auto-crop="true"
+              :auto-crop-width="cropWidth"
+              :auto-crop-height="cropHeight"
+              :fixed-box="false"
               :fixed="fixedRatio"
-              :fixedNumber="fixedNumber"
-              :centerBox="true"
-              :canMoveBox="true"
+              :fixed-number="fixedNumber"
+              :center-box="true"
+              :can-move-box="true"
               :full="false"
-              :maxImgSize="1200"
+              :max-img-size="1200"
               :original="true"
-              @realTime="handleRealTime"
+              @real-time="handleRealTime"
             ></VueCropper>
           </div>
 
@@ -363,10 +365,10 @@
           >
             <el-button-group>
               <el-tooltip content="向左旋转">
-                <el-button @click="rotate(-90)" :icon="RefreshLeft" />
+                <el-button :icon="RefreshLeft" @click="rotate(-90)" />
               </el-tooltip>
               <el-tooltip content="向右旋转">
-                <el-button @click="rotate(90)" :icon="RefreshRight" />
+                <el-button :icon="RefreshRight" @click="rotate(90)" />
               </el-tooltip>
               <el-button :icon="Plus" @click="changeScale(1)"></el-button>
               <el-button :icon="Minus" @click="changeScale(-1)"></el-button>
@@ -413,7 +415,7 @@
       <template #footer>
         <div class="dialog-footer">
           <el-button @click="dialogVisible = false">取 消</el-button>
-          <el-button type="primary" @click="handleUpload" :loading="uploading">
+          <el-button type="primary" :loading="uploading" @click="handleUpload">
             {{ uploading ? '上传中...' : '上 传' }}
           </el-button>
         </div>
@@ -422,16 +424,16 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
   import { reactive, ref, computed, getCurrentInstance } from 'vue'
   import { cloneDeep, isEqual } from 'lodash-es'
   import { ElMessage } from 'element-plus'
   import { useUserStore } from '@/pinia/modules/user'
   import { useAppStore } from '@/pinia'
   import { isvalidPhone } from '@/utils/validate'
-  import { getDict } from '@/utils/dictionary'
+  import { getDict, type DictOption } from '@/utils/dictionary'
   import { editUserCenter } from '@/api/permission/user'
-  import { getCurrent } from '@/api/log/operateLog'
+  import { getCurrent, type OperateLog } from '@/api/log/operateLog'
   import updatePassPanel from './module/updatePassPanel.vue'
   import updateEmailPanel from './module/updateEmailPanel.vue'
   import { getBaseUrl } from '@/utils/index'
@@ -444,6 +446,31 @@
   } from '@element-plus/icons-vue'
   import 'vue-cropper/dist/index.css'
   import { VueCropper } from 'vue-cropper'
+  import type {
+    TabsPaneContext,
+    UploadFile,
+    UploadInstance,
+    FormInstance
+  } from 'element-plus'
+
+  // 定义 VueCropper 实例类型
+  /* eslint-disable */
+  // interface CropperInstance {
+  //   rotateLeft: () => void
+  //   rotateRight: () => void
+  //   changeScale: (scale: number) => void
+  //   getCropBlob: (callback: (blob: Blob) => void) => void
+  // }
+  /* eslint-enable */
+
+  // 定义预览数据类型
+  interface PreviewData {
+    w?: number
+    h?: number
+    url?: string
+    img?: string
+    [key: string]: any
+  }
 
   defineOptions({
     name: 'PersonalCenter'
@@ -462,13 +489,14 @@
     Authorization: apeToken.tokenType + ' ' + apeToken.accessToken
   })
 
-  const uploadRef = ref(null)
+  const uploadRef = ref<UploadInstance | null>(null)
   // 响应式数据
   const dialogVisible = ref(false)
   const imgSrc = ref('')
-  const cropperRef = ref(null)
-  const { proxy } = getCurrentInstance()
-  const previews = ref({})
+  // const cropperRef = ref<CropperInstance | null>(null)
+  const instance = getCurrentInstance()
+  const proxy = instance?.proxy as any
+  const previews = ref<PreviewData>({})
   const uploading = ref(false)
 
   const activeTab = ref('profile')
@@ -480,15 +508,15 @@
   const pageIndex = ref(1)
   const total = ref(0)
   const pageSize = ref(10)
-  const tableData = ref([])
+  const tableData = ref<OperateLog[]>([])
 
   const operateDetailDrawer = ref(false)
-  const currentRow = ref({})
+  const currentRow = ref<Partial<OperateLog>>({})
 
   //字典
-  const genderOption = ref([])
+  const genderOption = ref<DictOption[]>([])
 
-  const validPhone = (rule, value, callback) => {
+  const validPhone = (_rule: any, value: any, callback: any) => {
     if (!value) {
       callback(new Error('请输入电话号码'))
     } else if (!isvalidPhone(value)) {
@@ -512,10 +540,10 @@
 
   const originalForm = reactive(cloneDeep(userForm))
   const formChanged = computed(() => !isEqual(userForm, originalForm))
-  const form = ref(null)
+  const form = ref<FormInstance | null>(null)
   const handleSave = async () => {
     loading.value = true
-    form.value.validate(async (valid) => {
+    form.value?.validate(async (valid: boolean) => {
       if (valid) {
         try {
           await editUserCenter({
@@ -552,24 +580,24 @@
     tableLoading.value = false
   }
 
-  const handleCurrentChange = (val) => {
+  const handleCurrentChange = (val: number) => {
     pageIndex.value = val
     void getTableData()
   }
 
-  const onTabClick = (tab) => {
+  const onTabClick = (tab: TabsPaneContext) => {
     if (tab.paneName === 'record') {
       tableLoading.value = true
       void getTableData()
     }
   }
 
-  const showOperateLogDetail = (row) => {
+  const showOperateLogDetail = (row: any) => {
     operateDetailDrawer.value = true
     currentRow.value = { ...row }
   }
 
-  const formatJson = (value) => {
+  const formatJson = (value: any) => {
     if (!value) return ''
     try {
       const obj = typeof value === 'string' ? JSON.parse(value) : value
@@ -580,7 +608,7 @@
   }
 
   // 缩放控制
-  const changeScale = (value) => {
+  const changeScale = (value: number) => {
     proxy.$refs.cropperRef.changeScale(value)
   }
 
@@ -630,7 +658,8 @@
   }
 
   // 文件处理
-  const handleFileChange = (file) => {
+  const handleFileChange = (file: UploadFile) => {
+    if (!file.raw) return
     const isImage = file.raw.type.includes('image')
     if (!isImage) {
       ElMessage.error('请选择图片文件')
@@ -643,15 +672,17 @@
     }
 
     const reader = new FileReader()
-    reader.onload = (e) => {
-      imgSrc.value = e.target.result
-      dialogVisible.value = true
+    reader.onload = (e: ProgressEvent<FileReader>) => {
+      if (e.target && typeof e.target.result === 'string') {
+        imgSrc.value = e.target.result
+        dialogVisible.value = true
+      }
     }
     reader.readAsDataURL(file.raw)
   }
 
   // 旋转控制
-  const rotate = (degree) => {
+  const rotate = (degree: number) => {
     if (degree === -90) {
       proxy.$refs.cropperRef.rotateLeft()
     } else {
@@ -660,29 +691,30 @@
   }
 
   // 实时预览
-  const handleRealTime = (data) => {
+  const handleRealTime = (data: any) => {
     previews.value = data
   }
 
   // 上传处理
   const handleUpload = () => {
     uploading.value = true
-    proxy.$refs.cropperRef.getCropBlob((blob) => {
+    proxy.$refs.cropperRef.getCropBlob((blob: Blob) => {
       try {
         const file = new File([blob], `${Date.now()}.jpg`, {
           type: 'image/jpeg'
         })
-        uploadRef.value.clearFiles()
-        uploadRef.value.handleStart(file)
-        uploadRef.value.submit()
+        uploadRef.value?.clearFiles()
+        uploadRef.value?.handleStart(file as any)
+        uploadRef.value?.submit()
       } catch (error) {
         uploading.value = false
-        ElMessage.error('上传失败: ' + error.message)
+        const errorMessage = error instanceof Error ? error.message : '未知错误'
+        ElMessage.error('上传失败: ' + errorMessage)
       }
     })
   }
 
-  const handleImageSuccess = (res) => {
+  const handleImageSuccess = (res: any) => {
     const closeDialog = () => {
       uploading.value = false
       dialogVisible.value = false
@@ -700,7 +732,8 @@
       }
     } catch (error) {
       closeDialog()
-      ElMessage.error('头像上传处理异常: ' + error.message)
+      const errorMessage = error instanceof Error ? error.message : '未知错误'
+      ElMessage.error('头像上传处理异常: ' + errorMessage)
     }
   }
 </script>

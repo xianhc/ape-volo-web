@@ -38,7 +38,7 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
   import { inject, ref } from 'vue'
 
   const pop = ref(false)

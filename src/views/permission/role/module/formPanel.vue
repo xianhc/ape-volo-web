@@ -10,7 +10,9 @@
         <span class="text-lg">{{ getFormTitle() }}</span>
         <div>
           <el-button @click="closeDialog">取 消</el-button>
-          <el-button type="primary" :loading="loading" @click="handleSave">保存</el-button>
+          <el-button type="primary" :loading="loading" @click="handleSave">
+            保存
+          </el-button>
         </div>
       </div>
     </template>
@@ -28,7 +30,7 @@
           :min="0"
           :max="999"
           controls-position="right"
-          style="width: 200px;"
+          style="width: 200px"
         />
       </el-form-item>
       <el-form-item label="数据权限" prop="dataScopeType">
@@ -46,15 +48,12 @@
           />
         </el-select>
       </el-form-item>
-      <el-form-item
-        v-if="form.dataScopeType === 5"
-        label="数据权限"
-      >
+      <el-form-item v-if="form.dataScopeType === 5" label="数据权限">
         <el-tree
           ref="deptTreeRef"
           :data="deptTreeData"
           :default-checked-keys="deptIdList"
-          :props="{children: 'children', label: 'name', isLeaf: 'leaf' }"
+          :props="{ children: 'children', label: 'name', isLeaf: 'leaf' }"
           show-checkbox
           highlight-current
           node-key="id"
@@ -73,33 +72,28 @@
     </el-form>
   </el-drawer>
 </template>
-<script setup>
+<script setup lang="ts">
   import { useAppStore } from '@/pinia'
   import { inject, ref, watch } from 'vue'
-  import { getDeptTree } from '@/api/permission/department'
+  import { getDeptTree, type Department } from '@/api/permission/department'
   import { ElMessage } from 'element-plus'
+  import type { DictOption } from '@/utils/dictionary'
+  import type { ElTree } from 'element-plus'
 
   const appStore = useAppStore()
 
+  const deptTreeData = ref<Department[]>([])
+  const deptIdList = ref<(string | number)[]>([])
+  const deptTreeRef = ref<InstanceType<typeof ElTree> | null>(null)
 
-  const deptTreeData = ref([])
-  const deptIdList = ref([])
-  const deptTreeRef = ref(null)
-
-
-  const props = defineProps({
-    dataScopeTypeOption: {
-      type: Array,
-      required: true
-    }
-  })
-
+  const props = defineProps<{
+    dataScopeTypeOption: DictOption[]
+  }>()
 
   const initDepartmentTree = async () => {
     const res = await getDeptTree()
     deptTreeData.value = res.data
   }
-
 
   const changeScope = async () => {
     if (form.value.dataScopeType === 5) {
@@ -108,25 +102,34 @@
   }
 
   // 注入crud
-  const crud = inject('crud')
-  const { form, dialogVisible, loading, closeDialog, validateAndSave, getFormTitle } = crud
+  const crud = inject<any>('crud')
+  const {
+    form,
+    dialogVisible,
+    loading,
+    closeDialog,
+    validateAndSave,
+    getFormTitle
+  } = crud
 
   const roleForm = ref(null)
   const rules = ref({
     name: [{ required: true, message: '请输入角色名称', trigger: 'blur' }],
     authCode: [{ required: true, message: '请输入角色标识', trigger: 'blur' }],
     level: [{ required: true, message: '请选择角色级别', trigger: 'blur' }],
-    dataScopeType: [{ required: true, message: '请选择角色数据权限', trigger: 'blur' }]
+    dataScopeType: [
+      { required: true, message: '请选择角色数据权限', trigger: 'blur' }
+    ]
   })
   // 验证表单并保存
   const handleSave = () => {
     if (form.value.dataScopeType === 5) {
-      const checkArr = deptTreeRef.value.getCheckedNodes(false, false)
+      const checkArr = deptTreeRef.value?.getCheckedNodes(false, false) || []
       if (!checkArr?.length) {
         ElMessage.warning('请至少选择一个部门')
         return
       }
-      form.value.deptIdArray = checkArr.map(item => item.id)
+      form.value.deptIdArray = checkArr.map((item: any) => item.id)
     }
     validateAndSave(roleForm.value)
   }
@@ -139,11 +142,10 @@
         if (form.value.dataScopeType === 5) {
           initDepartmentTree()
           deptIdList.value = form.value.departmentList
-            ? form.value.departmentList.map(item => item.id)
+            ? form.value.departmentList.map((item: any) => item.id)
             : []
         }
       }
     }
   )
-
 </script>

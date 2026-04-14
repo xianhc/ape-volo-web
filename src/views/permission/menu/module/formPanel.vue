@@ -10,9 +10,9 @@
         <span class="text-lg">{{ getFormTitle() }}</span>
         <div>
           <el-button @click="closeDialog">取 消</el-button>
-          <el-button type="primary" :loading="loading" @click="handleSave"
-            >确 定</el-button
-          >
+          <el-button type="primary" :loading="loading" @click="handleSave">
+            确 定
+          </el-button>
         </div>
       </div>
     </template>
@@ -58,36 +58,36 @@
         />
       </el-form-item>
       <el-form-item
-        :label="componentLabel"
         v-if="form.menuType !== MenuType.Button"
+        :label="componentLabel"
         prop="component"
       >
         <el-input v-model="form.component" />
       </el-form-item>
       <el-form-item
-        label="组件名称"
         v-if="[MenuType.Catalog, MenuType.Menu].includes(form.menuType)"
+        label="组件名称"
         prop="componentName"
       >
         <el-input v-model="form.componentName" />
       </el-form-item>
       <el-form-item
-        label="路由地址"
         v-if="form.menuType !== MenuType.Button"
+        label="路由地址"
         prop="path"
       >
         <el-input v-model="form.path" />
       </el-form-item>
       <el-form-item
-        label="图标"
         v-if="form.menuType !== MenuType.Button"
+        label="图标"
         prop="icon"
       >
         <IconSelect v-model="form.icon" />
       </el-form-item>
       <el-form-item
-        label="是否隐藏"
         v-if="form.menuType !== MenuType.Button"
+        label="是否隐藏"
         prop="hidden"
       >
         <el-radio-group v-model="form.hidden">
@@ -96,8 +96,8 @@
         </el-radio-group>
       </el-form-item>
       <el-form-item
-        label="是否缓存"
         v-if="form.menuType !== MenuType.Button"
+        label="是否缓存"
         prop="keepAlive"
       >
         <el-radio-group v-model="form.keepAlive">
@@ -106,16 +106,16 @@
         </el-radio-group>
       </el-form-item>
       <el-form-item
+        v-if="[MenuType.Menu, MenuType.Button].includes(form.menuType)"
         label="权限标识"
-        v-if="[MenuType.menu, MenuType.Button].includes(form.menuType)"
         prop="authCode"
       >
         <el-input v-model="form.authCode" />
       </el-form-item>
 
       <el-form-item
-        label="徽章类型"
         v-if="form.menuType !== MenuType.Button"
+        label="徽章类型"
         prop="badgeType"
       >
         <el-select
@@ -125,7 +125,7 @@
           placeholder=""
         >
           <el-option
-            v-for="item in badgeTypeOption"
+            v-for="item in props.badgeTypeOption"
             :key="Number(item.value)"
             :label="item.label"
             :value="Number(item.value)"
@@ -133,8 +133,8 @@
         </el-select>
       </el-form-item>
       <el-form-item
-        label="徽章文字"
         v-if="form.menuType !== MenuType.Button"
+        label="徽章文字"
         prop="badgeText"
       >
         <el-input
@@ -144,8 +144,8 @@
         />
       </el-form-item>
       <el-form-item
-        label="徽章样式"
         v-if="form.menuType !== MenuType.Button"
+        label="徽章样式"
         prop="badgeStyle"
       >
         <el-select
@@ -164,10 +164,10 @@
       <el-form-item label="状态" prop="enabled">
         <el-radio-group v-model="form.enabled">
           <el-radio
-            border
             v-for="item in props.statusTypeOption"
             :key="item.id"
-            :value="strToBool(item.value)"
+            border
+            :value="strToBool(String(item.value))"
           >
             {{ item.label }}
           </el-radio>
@@ -185,30 +185,22 @@
     </el-form>
   </el-drawer>
 </template>
-<script setup>
+<script setup lang="ts">
   import { useAppStore } from '@/pinia'
-  import IconSelect from '@/components/iconSelect/index.vue'
+  import IconSelect from '@/components/IconSelect/index.vue'
   import { computed, inject, ref } from 'vue'
   import { strToBool } from '@/utils/converter'
   import { getAll } from '@/api/permission/menu'
   import { MenuType } from '@/enums/MenuType'
+  import type { DictOption } from '@/utils/dictionary'
 
   const appStore = useAppStore()
 
-  const props = defineProps({
-    statusTypeOption: {
-      type: Array,
-      required: true
-    },
-    badgeTypeOption: {
-      type: Array,
-      required: true
-    },
-    menuTypeOption: {
-      type: Array,
-      required: true
-    }
-  })
+  const props = defineProps<{
+    statusTypeOption: DictOption[]
+    badgeTypeOption: DictOption[]
+    menuTypeOption: DictOption[]
+  }>()
 
   const menuOption = ref([
     {
@@ -217,9 +209,9 @@
     }
   ])
 
-  const setMenuOptions = (menuData, optionsData) => {
+  const setMenuOptions = (menuData: any, optionsData: any) => {
     menuData &&
-      menuData.forEach((item) => {
+      menuData.forEach((item: any) => {
         if (item.children && item.children.length) {
           const option = {
             title: item.title,
@@ -245,7 +237,7 @@
   init()
 
   const dynamicRules = computed(() => {
-    const baseRules = {
+    const baseRules: Record<string, any> = {
       title: [
         {
           required: true,
@@ -311,7 +303,7 @@
   )
 
   // 注入crud
-  const crud = inject('crud')
+  const crud = inject<any>('crud')
   const {
     form,
     dialogVisible,

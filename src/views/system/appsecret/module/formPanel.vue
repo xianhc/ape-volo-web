@@ -41,18 +41,18 @@
     <template #footer>
       <div>
         <el-button @click="closeDialog">取消</el-button>
-        <el-button type="primary" :loading="loading" @click="handleSave"
-          >保存</el-button
-        >
+        <el-button type="primary" :loading="loading" @click="handleSave">
+          保存
+        </el-button>
       </div>
     </template>
   </el-dialog>
 </template>
-<script setup>
+<script setup lang="ts">
   import { ref, inject } from 'vue'
 
   // 注入crud
-  const crud = inject('crud')
+  const crud = inject<any>('crud')
   const {
     form,
     dialogVisible,

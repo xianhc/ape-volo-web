@@ -101,9 +101,9 @@
                 </div>
                 <span class="search-history__name">{{ item.title }}</span>
                 <div class="search-history__action">
-                  <el-icon @click.stop="removeHistoryItem(index)"
-                    ><Close
-                  /></el-icon>
+                  <el-icon @click.stop="removeHistoryItem(index)">
+                    <Close />
+                  </el-icon>
                 </div>
               </li>
             </ul>
@@ -197,6 +197,15 @@
   } from '@element-plus/icons-vue'
   import { useRouterStore } from '@/pinia/modules/router'
 
+  // 菜单项接口定义
+  interface MenuItem {
+    title: string
+    path: string
+    name?: string
+    icon?: any
+    redirect?: string
+  }
+
   // 搜索历史本地存储配置
   const HISTORY_KEY = 'menu_search_history'
   const MAX_HISTORY = 5
@@ -209,10 +218,10 @@
   const searchKeyword = ref('') // 搜索关键词
   const searchInputRef = ref() // 搜索输入框引用
   const excludedRoutes = ref(['/redirect', '/login', '/401', '/403', '/404']) // 排除的路由
-  const menuItems = ref([]) // 所有菜单项
-  const searchResults = ref([]) // 搜索结果
+  const menuItems = ref<MenuItem[]>([]) // 所有菜单项
+  const searchResults = ref<MenuItem[]>([]) // 搜索结果
   const activeIndex = ref(-1) // 当前激活的结果索引
-  const searchHistory = ref([]) // 搜索历史记录
+  const searchHistory = ref<MenuItem[]>([]) // 搜索历史记录
 
   /**
    * 加载搜索历史记录
@@ -245,7 +254,7 @@
    * @param {Object} item - 要添加的菜单项对象
    * @description 添加搜索项到历史记录，去重并限制数量
    */
-  function addToHistory(item) {
+  function addToHistory(item: MenuItem) {
     // 检查是否已存在，如果存在则移除（避免重复）
     const index = searchHistory.value.findIndex((i) => i.path === item.path)
 
@@ -271,7 +280,7 @@
    * @param {number} index - 要移除的历史记录索引
    * @description 从历史记录中删除指定索引的项目并保存
    */
-  function removeHistoryItem(index) {
+  function removeHistoryItem(index: number) {
     searchHistory.value.splice(index, 1)
     saveSearchHistory()
   }
@@ -292,7 +301,7 @@
    * @param {KeyboardEvent} e - 键盘事件对象
    * @description 监听 Ctrl+K 组合键，触发搜索模态框
    */
-  function handleKeyDown(e) {
+  function handleKeyDown(e: KeyboardEvent) {
     // 判断是否为Ctrl+K组合键（支持Mac的Cmd+K）
     if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
       e.preventDefault() // 阻止浏览器默认行为
@@ -351,7 +360,7 @@
     activeIndex.value = -1
     if (searchKeyword.value) {
       const keyword = searchKeyword.value.toLowerCase()
-      searchResults.value = menuItems.value.filter((item) =>
+      searchResults.value = menuItems.value.filter((item: any) =>
         item.title.toLowerCase().includes(keyword)
       )
     } else {
@@ -383,7 +392,7 @@
    * @param {string} direction - 导航方向：'up' 或 'down'
    * @description 使用上下箭头键在搜索结果中导航，支持循环选择
    */
-  function navigateResults(direction) {
+  function navigateResults(direction: 'up' | 'down') {
     if (displayResults.value.length === 0) return
 
     if (direction === 'up') {
@@ -405,7 +414,7 @@
    * @param {Object} item - 菜单项对象，包含路径和标题信息
    * @description 关闭搜索框，添加到历史记录，并跳转到目标路由
    */
-  function navigateToRoute(item) {
+  function navigateToRoute(item: MenuItem) {
     closeSearchModal()
     // 添加到历史记录
     addToHistory(item)
@@ -421,8 +430,8 @@
    * @param {String} parentPath - 父级路由的完整路径，默认为空字符串
    * @description 递归遍历路由配置，提取可搜索的菜单项
    */
-  function loadRoutes(routes, basePath = '', parentPath = '') {
-    routes.forEach((route) => {
+  function loadRoutes(routes: any, basePath = '', parentPath = '') {
+    routes.forEach((route: any) => {
       // 首次递归时，parentPath 为空则用 basePath
       let curParent = parentPath || basePath || ''
       // 拼接路径，自动处理反斜杠

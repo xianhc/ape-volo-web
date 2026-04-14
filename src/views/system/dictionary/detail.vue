@@ -27,24 +27,26 @@
             type="primary"
             icon="plus"
             @click="toAdd"
-            >新增字典详情</el-button
           >
+            新增字典详情
+          </el-button>
           <el-button
             v-has-perm="perms.del"
             icon="delete"
             type="danger"
             :disabled="!multipleSelection.length"
             @click="doBatchDelete"
-            >删除
+          >
+            删除
           </el-button>
         </div>
         <el-table
           ref="tableRef"
+          v-loading="loading"
           :data="data"
+          row-key="id"
           @selection-change="onSelectionChange"
           @sort-change="onSortChange"
-          v-loading="loading"
-          row-key="id"
         >
           <el-table-column
             align="left"
@@ -90,13 +92,19 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
   import { ref, watchEffect } from 'vue'
   import { get, del, add, edit } from '@/api/system/dictionaryDetail'
   import { useCrud } from '@/components/Crud/UseCrud'
   import dictionaryDetailFormPanel from './module/dictionaryDetailFormPanel.vue'
-  import SearchOpts from '@/components/CRUD/SearchOpts.vue'
-  import RowOpts from '@/components/CRUD/RowOpts.vue'
+  import SearchOpts from '@/components/Crud/SearchOpts.vue'
+  import RowOpts from '@/components/Crud/RowOpts.vue'
+
+  interface DetailSearchInfo {
+    label?: string
+    value?: string
+    dictId?: number
+  }
 
   defineOptions({
     name: 'DictionaryDetail'
@@ -122,7 +130,11 @@
   const dictName = ref('')
 
   // 使用不同的变量名避免冲突
-  const detailSearchInfo = ref({})
+  const detailSearchInfo = ref<DetailSearchInfo>({
+    label: '',
+    value: '',
+    dictId: undefined
+  })
   const {
     data,
     loading,
@@ -133,12 +145,18 @@
     multipleSelection,
     onSortChange
   } = useCrud({
-    crudMethod: { list: get, del: del, add: add, edit: edit },
+    crudMethod: {
+      list: get,
+      del: del,
+      add: add,
+      edit: edit,
+      download: async () => ({ data: null } as any)
+    },
     defaultForm: () => ({
       id: 0,
       dictId: props.selectedDictionaryId,
-      label: null,
-      value: null,
+      label: '',
+      value: '',
       dictSort: 999
     }),
     searchInfo: detailSearchInfo,

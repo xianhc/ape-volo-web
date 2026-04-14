@@ -27,10 +27,7 @@
               id="base-load-dom"
               class="ape-body-h bg-gray-50 dark:bg-gray-800"
             >
-              <transition
-                mode="out-in"
-                :name="route.meta.transitionType || config.transitionType"
-              >
+              <transition mode="out-in" :name="transitionName">
                 <keep-alive :include="routerStore.keepAliveRouters">
                   <component
                     :is="Component"
@@ -47,7 +44,7 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
   import Navigation from '@/views/layout/navigation/index.vue'
   import Header from '@/views/layout/header/index.vue'
   import { MenuNavigationType } from '@/enums/MenuNavigationType'
@@ -80,6 +77,11 @@
     color: isDark.value ? 'rgba(255,255,255, .15)' : 'rgba(0, 0, 0, .15)'
   }))
 
+  const transitionName = computed<string>(() => {
+    const meta = currentRoute.meta as { transitionType?: string }
+    return meta.transitionType ?? config.value.transitionType
+  })
+
   onMounted(() => {
     // 挂载一些通用的事件
     emitter.on('reload', reload)
@@ -97,7 +99,7 @@
   })
 
   const reloadFlag = ref(true)
-  let reloadTimer = null
+  let reloadTimer: number | null = null
   const reload = async () => {
     if (reloadTimer) {
       window.clearTimeout(reloadTimer)
@@ -108,7 +110,7 @@
         await nextTick()
         reloadFlag.value = true
       } else {
-        const title = currentRoute.meta.title
+        const title = currentRoute.meta.title as string
         router.push({ name: 'Reload', params: { title } })
       }
     }, 400)

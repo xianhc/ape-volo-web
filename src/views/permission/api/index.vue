@@ -36,8 +36,8 @@
         <template #right>
           <el-button
             v-has-role="['admin']"
-            @click="doRefreshApis"
             type="primary"
+            @click="doRefreshApis"
           >
             <el-icon>
               <Refresh />
@@ -48,12 +48,12 @@
       </CrudOpts>
       <el-table
         ref="tableRef"
-        :data="data"
         v-loading="loading"
-        @selection-change="onSelectionChange"
-        @sort-change="onSortChange"
+        :data="data"
         style="width: 100%"
         row-key="id"
+        @selection-change="onSelectionChange"
+        @sort-change="onSortChange"
       >
         <el-table-column align="left" type="selection" width="55" />
         <el-table-column align="left" prop="group" label="组" />
@@ -66,7 +66,7 @@
           :min-width="appStore.operateMinWith"
           label="操作"
         >
-          <template v-slot="scope">
+          <template #default="scope">
             <RowOpts :row="scope.row" :val="scope.row.name" :perms="perms" />
           </template>
         </el-table-column>
@@ -75,14 +75,17 @@
     </div>
 
     <!--表单渲染-->
-    <formPanel :http-method-option="dict" :api-group-option="apiGroupOption" />
+    <formPanel
+      :http-method-option="httpMethodOption"
+      :api-group-option="apiGroupOption"
+    />
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
   import { ref } from 'vue'
   import { ElMessage } from 'element-plus'
-  import { getDict } from '@/utils/dictionary'
+  import { getDict, type DictOption } from '@/utils/dictionary'
   import {
     get,
     del,
@@ -90,13 +93,15 @@
     edit,
     download,
     group,
-    refresh as refreshApi
+    refresh as refreshApi,
+    type ApiGroup
   } from '@/api/permission/api'
+  import type { ApiQueryParams } from '@/api/permission/types/api.types'
   import formPanel from './module/formPanel.vue'
   import { useCrud } from '@/components/Crud/UseCrud'
-  import CrudOpts from '@/components/CRUD/CrudOpts.vue'
-  import RowOpts from '@/components/CRUD/RowOpts.vue'
-  import SearchOpts from '@/components/CRUD/SearchOpts.vue'
+  import CrudOpts from '@/components/Crud/CrudOpts.vue'
+  import RowOpts from '@/components/Crud/RowOpts.vue'
+  import SearchOpts from '@/components/Crud/SearchOpts.vue'
   import { useAppStore } from '@/pinia'
 
   defineOptions({
@@ -112,14 +117,10 @@
 
   const appStore = useAppStore()
 
-  const httpMethodOption = ref([])
-  const apiGroupOption = ref([])
+  const httpMethodOption = ref<DictOption[]>([])
+  const apiGroupOption = ref<ApiGroup[]>([])
 
-  const searchInfo = ref({
-    group: null,
-    description: null,
-    method: null
-  })
+  const searchInfo = ref<ApiQueryParams>({})
 
   const {
     data,
@@ -139,21 +140,21 @@
     },
     defaultForm: () => ({
       id: 0,
-      group: null,
-      description: null,
-      url: null,
-      method: null
+      group: undefined,
+      description: undefined,
+      url: undefined,
+      method: undefined
     }),
     searchInfo
   })
 
   // 刷新API
   const doRefreshApis = async () => {
-    refreshApi()
-      .then((res) => {
+    refreshApi({})
+      .then(() => {
         ElMessage({
           type: 'success',
-          message: res.message || '刷新成功'
+          message: '刷新成功'
         })
         refresh()
       })

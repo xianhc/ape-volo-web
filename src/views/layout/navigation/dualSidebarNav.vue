@@ -9,10 +9,8 @@
     >
       <el-scrollbar>
         <el-menu
-          :collapse="true"
-          :collapse-transition="false"
           :default-active="topActive"
-          class="border-r-0 w-full"
+          class="border-r-0 w-full dual-top-menu"
           unique-opened
           @select="selectTopMenuItem"
         >
@@ -23,40 +21,47 @@
               "
               :key="item.name"
               :index="item.name"
-              class="dark:text-gray-300 overflow-hidden"
+              class="dark:text-gray-300 overflow-hidden dual-top-menu-item"
               :style="{
-                height: config.layoutSideItemHeight + 'px'
+                height: firstLevelMenuItemHeight + 'px'
               }"
             >
-              <el-icon v-if="item.meta.icon">
-                <component :is="item.meta.icon" />
-              </el-icon>
-              <template v-else>
-                {{ item.meta.title[0] }}
-              </template>
-              <template #title>
-                {{ item.meta.title }}
-              </template>
+              <div class="dual-top-menu-item__content">
+                <el-icon v-if="item.meta.icon" class="dual-top-menu-item__icon">
+                  <component :is="item.meta.icon" />
+                </el-icon>
+                <span v-else class="dual-top-menu-item__fallback">
+                  {{ item.meta.title[0] }}
+                </span>
+                <span class="dual-top-menu-item__label">
+                  {{ item.meta.title }}
+                </span>
+              </div>
             </el-menu-item>
             <template v-else-if="!item.hidden">
               <el-menu-item
                 :key="item.name"
                 :index="item.name"
                 :class="{ 'is-active': topActive === item.name }"
-                class="dark:text-gray-300 overflow-hidden"
+                class="dark:text-gray-300 overflow-hidden dual-top-menu-item"
                 :style="{
-                  height: config.layoutSideItemHeight + 'px'
+                  height: firstLevelMenuItemHeight + 'px'
                 }"
               >
-                <el-icon v-if="item.meta.icon">
-                  <component :is="item.meta.icon" />
-                </el-icon>
-                <template v-else>
-                  {{ item.meta.title[0] }}
-                </template>
-                <template #title>
-                  {{ item.meta.title }}
-                </template>
+                <div class="dual-top-menu-item__content">
+                  <el-icon
+                    v-if="item.meta.icon"
+                    class="dual-top-menu-item__icon"
+                  >
+                    <component :is="item.meta.icon" />
+                  </el-icon>
+                  <span v-else class="dual-top-menu-item__fallback">
+                    {{ item.meta.title[0] }}
+                  </span>
+                  <span class="dual-top-menu-item__label">
+                    {{ item.meta.title }}
+                  </span>
+                </div>
               </el-menu-item>
             </template>
           </template>
@@ -117,7 +122,7 @@
   const { device, config } = storeToRefs(appStore)
 
   defineOptions({
-    name: 'SidebarMode'
+    name: 'DualSidebarNav'
   })
 
   const route = useRoute()
@@ -127,6 +132,9 @@
   const active = ref('')
   const topActive = ref('')
   const secondLevelMenus = ref([])
+  const firstLevelMenuItemHeight = computed(() => {
+    return Math.max(Number(config.value.layoutSideItemHeight) || 0, 72)
+  })
 
   const layoutSideWidth = computed(() => {
     if (!isCollapse.value) {
@@ -282,3 +290,79 @@
     }
   })
 </script>
+
+<style scoped>
+  .dual-top-menu-item {
+    padding: 6px 4px;
+    line-height: normal;
+    justify-content: center;
+  }
+
+  .dual-top-menu-item__content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    width: 100%;
+    min-height: 100%;
+    text-align: center;
+  }
+
+  .dual-top-menu-item__icon {
+    font-size: 18px;
+    margin: 0;
+  }
+
+  .dual-top-menu-item__fallback {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    border-radius: 9999px;
+    font-size: 12px;
+    font-weight: 600;
+    background: rgba(148, 163, 184, 0.16);
+  }
+
+  .dual-top-menu-item__label {
+    display: -webkit-box;
+    overflow: hidden;
+    font-size: 11px;
+    line-height: 1.2;
+    text-align: center;
+    word-break: break-all;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+  }
+
+  .dual-top-menu :deep(.el-menu-item) {
+    margin: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 6px 0 !important;
+    text-align: center;
+  }
+
+  .dual-top-menu :deep(.el-menu-item .el-icon) {
+    width: auto;
+    margin-right: 0;
+  }
+
+  .dual-top-menu :deep(.el-menu-item > *) {
+    margin: 0 auto;
+  }
+
+  .dual-top-menu :deep(.el-menu-item.is-active) .dual-top-menu-item__label,
+  .dual-top-menu :deep(.el-menu-item.is-active) .dual-top-menu-item__icon,
+  .dual-top-menu :deep(.el-menu-item.is-active) .dual-top-menu-item__fallback {
+    color: #fff;
+  }
+
+  .dual-top-menu :deep(.el-menu-item.is-active) .dual-top-menu-item__fallback {
+    background: rgba(255, 255, 255, 0.18);
+  }
+</style>

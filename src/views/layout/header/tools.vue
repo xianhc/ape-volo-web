@@ -39,7 +39,7 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
   import { useAppStore } from '@/pinia'
   import { ref } from 'vue'
   import { emitter } from '@/utils/bus.js'

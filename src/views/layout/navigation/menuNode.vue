@@ -13,16 +13,16 @@
           class="flex items-center"
           :style="{ height: sideHeight }"
         >
-          <el-icon v-if="routerInfo.meta.icon">
-            <component :is="routerInfo.meta.icon" />
+          <el-icon v-if="routerInfo.meta?.icon">
+            <component :is="routerInfo.meta?.icon" />
           </el-icon>
-          <span>{{ routerInfo.meta.title }}</span>
+          <span>{{ routerInfo.meta?.title }}</span>
         </div>
         <template v-else>
-          <el-icon v-if="routerInfo.meta.icon">
-            <component :is="routerInfo.meta.icon" />
+          <el-icon v-if="routerInfo.meta?.icon">
+            <component :is="routerInfo.meta?.icon" />
           </el-icon>
-          <span>{{ routerInfo.meta.title }}</span>
+          <span>{{ routerInfo.meta?.title }}</span>
         </template>
       </template>
 
@@ -41,45 +41,44 @@
       :index="routerInfo.name"
       :style="{ height: sideHeight }"
     >
-      <el-icon v-if="routerInfo.meta.icon">
-        <component :is="routerInfo.meta.icon" />
+      <el-icon v-if="routerInfo.meta?.icon">
+        <component :is="routerInfo.meta?.icon" />
       </el-icon>
       <template v-else>
-        {{ isCollapse ? routerInfo.meta.title[0] : '' }}
+        {{ isCollapse ? routerInfo.meta?.title?.[0] : '' }}
       </template>
       <template #title>
-        {{ routerInfo.meta.title }}
+        {{ routerInfo.meta?.title }}
       </template>
     </el-menu-item>
   </template>
 </template>
 
-<script setup>
-  import { computed, inject } from 'vue'
+<script setup lang="ts">
+  import { computed, inject, ref } from 'vue'
+  import type { Ref } from 'vue'
   import { useAppStore } from '@/pinia'
   import { storeToRefs } from 'pinia'
+  import type { RouteMenuItem } from '@/pinia/modules/router'
 
   defineOptions({
     name: 'AsideComponent'
   })
 
-  const props = defineProps({
-    routerInfo: {
-      type: Object,
-      default: () => null
-    },
-    mode: {
-      type: String,
-      default: 'vertical'
+  const props = withDefaults(
+    defineProps<{
+      routerInfo: RouteMenuItem
+      mode?: string
+    }>(),
+    {
+      mode: 'vertical'
     }
-  })
+  )
 
   const appStore = useAppStore()
   const { config } = storeToRefs(appStore)
 
-  const isCollapse = inject('isCollapse', {
-    default: false
-  })
+  const isCollapse = inject<Ref<boolean>>('isCollapse', ref(false))
 
   // 计算菜单高度
   const sideHeight = computed(() => {

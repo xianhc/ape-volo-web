@@ -42,16 +42,27 @@
     </template>
   </el-dialog>
 </template>
-<script setup>
+<script setup lang="ts">
   import { reactive, ref } from 'vue'
   import { ElMessage } from 'element-plus'
+  import type { FormInstance } from 'element-plus'
   import { editUserPass } from '@/api/permission/user'
   import { useUserStore } from '@/pinia/modules/user'
 
+  interface PwdModifyForm {
+    oldPass: string
+    newPass: string
+    confirmPass: string
+  }
+
   const userStore = useUserStore()
 
-  const modifyPwdForm = ref(null)
-  const pwdModify = ref({})
+  const modifyPwdForm = ref<FormInstance | null>(null)
+  const pwdModify = ref<PwdModifyForm>({
+    oldPass: '',
+    newPass: '',
+    confirmPass: ''
+  })
 
   const props = defineProps({
     showUpdatePassPanel: {
@@ -72,7 +83,7 @@
     clearPassword()
   }
 
-  const confirmPass = (rule, value, callback) => {
+  const confirmPass = (_rule: any, value: any, callback: any) => {
     if (value) {
       if (pwdModify.value.newPass !== value) {
         callback(new Error('两次输入的密码不一致'))
@@ -94,16 +105,14 @@
   })
 
   const clearPassword = () => {
-    pwdModify.value = {
-      oldPass: '',
-      newPass: '',
-      confirmPass: ''
-    }
+    pwdModify.value.oldPass = ''
+    pwdModify.value.newPass = ''
+    pwdModify.value.confirmPass = ''
     modifyPwdForm.value?.clearValidate()
   }
 
   const doSubmit = async () => {
-    modifyPwdForm.value.validate((valid) => {
+    modifyPwdForm.value?.validate((valid: boolean) => {
       if (valid) {
         editUserPass({
           oldPass: pwdModify.value.oldPass,

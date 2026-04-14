@@ -124,10 +124,9 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
   import { ref, onMounted, computed } from 'vue'
   import * as ElementPlusIconsVue from '@element-plus/icons-vue'
-  import config from '@/setting'
 
   /**
    * 组件属性定义
@@ -160,10 +159,6 @@
    */
   const emit = defineEmits(['update:modelValue'])
 
-  // DOM 引用
-  const iconSelectRef = ref()
-  const popoverContentRef = ref()
-
   // 弹窗显示状态
   const popoverVisible = ref(false)
 
@@ -171,7 +166,7 @@
   const activeTab = ref('svg')
 
   // 图标数据
-  const svgIcons = ref([])
+  const svgIcons = ref<string[]>([])
   const elementIcons = ref(Object.keys(ElementPlusIconsVue))
 
   // 双向绑定的选中图标
@@ -183,7 +178,7 @@
 
   // 搜索过滤相关
   const filterText = ref('')
-  const filteredSvgIcons = ref([])
+  const filteredSvgIcons = ref<string[]>([])
   const filteredElementIcons = ref(elementIcons.value)
 
   /**
@@ -202,8 +197,7 @@
    * 使用 Vite 的 import.meta.glob 功能实现文件批量导入
    */
   function loadIcons() {
-    const list = config.logs
-    console.log('加载图标配置:', list)
+    console.log('加载图标配置')
 
     // 使用 Vite 的 glob 导入功能获取所有 SVG 图标
     const icons = import.meta.glob('../../assets/icons/*.svg')
@@ -224,7 +218,7 @@
    * @param {Object} tabPane - 选项卡面板对象
    * @description 切换图标类型时重新应用过滤条件
    */
-  function handleTabClick(tabPane) {
+  function handleTabClick(tabPane: any) {
     activeTab.value = tabPane.props.name
     filterIcons()
   }
@@ -239,14 +233,14 @@
     if (activeTab.value === 'svg') {
       // 过滤 SVG 图标
       filteredSvgIcons.value = filterText.value
-        ? svgIcons.value.filter((icon) =>
+        ? svgIcons.value.filter((icon: string) =>
             icon.toLowerCase().includes(filterText.value.toLowerCase())
           )
         : svgIcons.value
     } else {
       // 过滤 Element Plus 图标
       filteredElementIcons.value = filterText.value
-        ? elementIcons.value.filter((icon) =>
+        ? elementIcons.value.filter((icon: string) =>
             icon.toLowerCase().includes(filterText.value.toLowerCase())
           )
         : elementIcons.value
@@ -259,7 +253,7 @@
    * @param {string} icon - 选中的图标名称
    * @description 更新选中的图标并关闭弹窗
    */
-  function selectIcon(icon) {
+  function selectIcon(icon: any) {
     emit('update:modelValue', icon)
     popoverVisible.value = false
   }

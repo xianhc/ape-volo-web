@@ -20,11 +20,12 @@
   <div ref="chartRef" :style="{ width, height }"></div>
 </template>
 
-<script setup>
+<script setup lang="ts">
   import { ref, onMounted, nextTick, watch, onBeforeUnmount } from 'vue'
 
   // ECharts 核心模块导入
   import * as echarts from 'echarts/core'
+  import type { EChartsType } from 'echarts/core'
 
   // 按需导入图表类型，减少打包体积
   import { BarChart, LineChart, PieChart } from 'echarts/charts'
@@ -100,7 +101,7 @@
   const chartRef = ref(null)
 
   // ECharts 实例，用于图表的操作和管理
-  let chartInstance = null
+  let chartInstance: EChartsType | null = null
 
   /**
    * 初始化图表实例

@@ -45,18 +45,29 @@
   </el-dialog>
 </template>
 
-<script setup>
+<script setup lang="ts">
   import { reactive, ref } from 'vue'
   import { ElMessage } from 'element-plus'
+  import type { FormInstance } from 'element-plus'
   import { editUserEmail } from '@/api/permission/user'
   import { getResetEmailCode } from '@/api/verificationCode'
   import { useUserStore } from '@/pinia/modules/user'
   import { validEmail } from '@/utils/validate'
 
+  interface EmailModifyForm {
+    email: string
+    code: string
+    pass: string
+  }
+
   const userStore = useUserStore()
 
-  const emailForm = ref(null)
-  const emailModify = ref({})
+  const emailForm = ref<FormInstance | null>(null)
+  const emailModify = ref<EmailModifyForm>({
+    email: '',
+    code: '',
+    pass: ''
+  })
   const time = ref(0)
 
   const props = defineProps({
@@ -78,7 +89,7 @@
     clearEmail()
   }
 
-  const validMail = (rule, value, callback) => {
+  const validMail = (_rule: any, value: any, callback: any) => {
     if (value === '' || value === null) {
       callback(new Error('新邮箱不能为空'))
     } else if (value === userStore.userInfo.email) {
@@ -96,11 +107,9 @@
   })
 
   const clearEmail = () => {
-    emailModify.value = {
-      email: '',
-      code: '',
-      pass: ''
-    }
+    emailModify.value.email = ''
+    emailModify.value.code = ''
+    emailModify.value.pass = ''
     emailForm.value?.clearValidate()
   }
 
@@ -108,11 +117,11 @@
     getResetEmailCode({
       email: emailModify.value.email
     }).then((res) => {
-      ElMessage.success(res.data.message)
+      ElMessage.success((res.data as any)?.message || '验证码已发送')
       time.value = 60
-      let timer = setInterval(() => {
+      let timer: ReturnType<typeof setInterval> | null = setInterval(() => {
         time.value--
-        if (time.value <= 0) {
+        if (time.value <= 0 && timer) {
           clearInterval(timer)
           timer = null
         }
@@ -120,7 +129,7 @@
     })
   }
   const doSubmit = async () => {
-    emailForm.value.validate((valid) => {
+    emailForm.value?.validate((valid: boolean) => {
       if (valid) {
         editUserEmail({
           email: emailModify.value.email,

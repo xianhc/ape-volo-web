@@ -14,8 +14,8 @@
               class="w-3/5"
               placeholder="请输入关键字筛选"
             />
-            <el-button class="float-right" type="primary" @click="saveMenuTree"
-              >确 定
+            <el-button class="float-right" type="primary" @click="saveMenuTree">
+              确 定
             </el-button>
           </div>
           <div class="tree-content clear-both">
@@ -49,8 +49,8 @@
               class="w-3/5"
               placeholder="请输入关键字筛选"
             />
-            <el-button class="float-right" type="primary" @click="saveApiTree"
-              >确 定
+            <el-button class="float-right" type="primary" @click="saveApiTree">
+              确 定
             </el-button>
           </div>
           <div class="tree-content clear-both">
@@ -80,13 +80,14 @@
   </el-drawer>
 </template>
 
-<script setup>
-  import { getAll as getAllMenu } from '@/api/permission/menu'
-  import { getAll as getAllApi } from '@/api/permission/api'
+<script setup lang="ts">
+  import { getAll as getAllMenu, type Menu } from '@/api/permission/menu'
+  import { getAll as getAllApi, type ApiItem } from '@/api/permission/api'
   import { single, editRoleMenu, editRoleApi } from '@/api/permission/role'
   import { nextTick, ref, watch } from 'vue'
   import { ElMessage } from 'element-plus'
   import { useAppStore } from '@/pinia'
+  import type { ElTree } from 'element-plus'
 
   defineOptions({
     name: 'Authorize'
@@ -94,32 +95,33 @@
 
   const appStore = useAppStore()
 
-  const roleId = ref(0)
+  const roleId = ref<number>(0)
 
   const filterMenuText = ref('')
-  const menuTreeData = ref([])
-  const menuTreeIds = ref([])
+  const menuTreeData = ref<Menu[]>([])
+  const menuTreeIds = ref<number[]>([])
 
   const filterApiText = ref('')
-  const apiTreeData = ref([])
-  const apiTreeIds = ref([])
+  const apiTreeData = ref<ApiItem[]>([])
+  const apiTreeIds = ref<number[]>([])
 
   const init = async () => {
     const resRole = await single({ id: roleId.value })
     const resMenu = await getAllMenu()
     menuTreeData.value = resMenu.data
-    const roleMenuList = resRole.data.menuList
-    const menuIdArr = []
-    roleMenuList.forEach((item) => {
+    debugger
+    const roleMenuList = resRole.data.menuList || []
+    const menuIdArr: number[] = []
+    roleMenuList.forEach((item: any) => {
       menuIdArr.push(Number(item.id))
     })
     menuTreeIds.value = menuIdArr
 
     const resApi = await getAllApi()
     apiTreeData.value = resApi.data
-    const roleApiList = resRole.data.apiList
-    const apiIdArr = []
-    roleApiList.forEach((item) => {
+    const roleApiList = resRole.data.apiList || []
+    const apiIdArr: number[] = []
+    roleApiList.forEach((item: any) => {
       apiIdArr.push(Number(item.id))
     })
     apiTreeIds.value = apiIdArr
@@ -135,12 +137,12 @@
     })
   }
 
-  const menuTree = ref(null)
+  const menuTree = ref<InstanceType<typeof ElTree> | null>(null)
   const saveMenuTree = async () => {
-    const checkArr = menuTree.value.getCheckedNodes(false, false)
+    const checkArr = menuTree.value?.getCheckedNodes(false, false) || []
     await editRoleMenu({
-      menuIdArray: checkArr.map((item) => item.id),
-      Id: roleId.value
+      id: roleId.value,
+      menuIdArray: checkArr.map((item: any) => item.id)
     })
     ElMessage({
       type: 'success',
@@ -148,12 +150,12 @@
     })
   }
 
-  const apiTree = ref(null)
+  const apiTree = ref<InstanceType<typeof ElTree> | null>(null)
   const saveApiTree = async () => {
-    const checkArr = apiTree.value.getCheckedNodes(false, false)
+    const checkArr = apiTree.value?.getCheckedNodes(false, false) || []
     await editRoleApi({
-      apiIdArray: checkArr.map((item) => item.id),
-      Id: roleId.value
+      id: roleId.value,
+      apiIdArray: checkArr.map((item: any) => item.id)
     })
     ElMessage({
       type: 'success',
@@ -161,26 +163,26 @@
     })
   }
 
-  const filterMenuNode = (value, data) => {
+  const filterMenuNode = (value: string, data: any) => {
     if (!value) return true
     return data.title.indexOf(value) !== -1
   }
   watch(filterMenuText, (val) => {
-    menuTree.value.filter(val)
+    menuTree.value?.filter(val)
   })
 
-  const filterApiNode = (value, data) => {
+  const filterApiNode = (value: string, data: any) => {
     if (!value) return true
     return data.label.indexOf(value) !== -1
   }
 
   watch(filterApiText, (val) => {
-    apiTree.value.filter(val)
+    apiTree.value?.filter(val)
   })
 
   const dialogFormVisible = ref(false)
-  const openAuthorizeDialog = async (id) => {
-    roleId.value = id
+  const openAuthorizeDialog = async (id: string | number) => {
+    roleId.value = Number(id)
     dialogFormVisible.value = true
     await init() // 初始化数据
   }

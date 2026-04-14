@@ -10,9 +10,9 @@
         <span class="text-lg">{{ getFormTitle() }}</span>
         <div>
           <el-button @click="closeDialog">取消</el-button>
-          <el-button type="primary" :loading="loading" @click="handleSave"
-            >保存</el-button
-          >
+          <el-button type="primary" :loading="loading" @click="handleSave">
+            保存
+          </el-button>
         </div>
       </div>
     </template>
@@ -32,11 +32,11 @@
       </el-form-item>
       <el-form-item label="状态" prop="enabled">
         <el-radio
-          border
           v-for="item in props.statusTypeOption"
           :key="item.id"
           v-model="form.enabled"
-          :label="strToBool(item.value)"
+          border
+          :label="strToBool(String(item.value))"
         >
           {{ item.label }}
         </el-radio>
@@ -44,22 +44,20 @@
     </el-form>
   </el-drawer>
 </template>
-<script setup>
+<script setup lang="ts">
   import { ref, inject } from 'vue'
   import { useAppStore } from '@/pinia'
   import { strToBool } from '@/utils/converter'
+  import type { DictOption } from '@/utils/dictionary'
 
   const appStore = useAppStore()
 
-  const props = defineProps({
-    statusTypeOption: {
-      type: Array,
-      required: true
-    }
-  })
+  const props = defineProps<{
+    statusTypeOption: DictOption[]
+  }>()
 
   // 注入crud
-  const crud = inject('crud')
+  const crud = inject<any>('crud')
   const {
     form,
     dialogVisible,

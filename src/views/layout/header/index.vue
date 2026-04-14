@@ -9,8 +9,8 @@
         @click="router.push({ path: '/' })"
       >
         <img
-          alt
-          class="h-[46px] w-[50px] bg-white rounded-full"
+          alt="logo"
+          class="h-[46px] w-[50px] bg-white dark:bg-gray-700 border-gray-200 dark:border-gray-600 rounded-full"
           :src="setting.appLogo"
         />
         <div
@@ -30,7 +30,7 @@
           v-for="item in matched.slice(1, matched.length)"
           :key="item.path"
         >
-          {{ fmtTitle(item.meta.title, route) }}
+          {{ getItemTitle(item) }}
         </el-breadcrumb-item>
       </el-breadcrumb>
       <Aside
@@ -75,7 +75,7 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
   import tools from './tools.vue'
   import { getBaseUrl } from '@/utils/index'
   import noAvatar from '@/assets/noAvatar.png'
@@ -88,6 +88,7 @@
   import Aside from '@/views/layout/navigation/index.vue'
   import { MenuNavigationType } from '@/enums/MenuNavigationType'
   import setting from '@/setting'
+  import type { RouteRecordNormalized } from 'vue-router'
   const userStore = useUserStore()
   const router = useRouter()
   const route = useRoute()
@@ -99,5 +100,10 @@
   const toPerson = () => {
     router.push({ name: 'personalCenter' })
   }
-  const matched = computed(() => route.meta.matched)
+  const matched = computed(
+    () => (route.meta.matched || []) as RouteRecordNormalized[]
+  )
+  const getItemTitle = (item: RouteRecordNormalized) => {
+    return fmtTitle(String(item.meta.title || ''), route)
+  }
 </script>

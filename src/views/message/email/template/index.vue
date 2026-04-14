@@ -30,11 +30,11 @@
       <CrudOpts :perms="perms" />
       <el-table
         ref="tableRef"
-        :data="data"
         v-loading="loading"
+        :data="data"
+        row-key="id"
         @selection-change="onSelectionChange"
         @sort-change="onSortChange"
-        row-key="id"
       >
         <el-table-column type="selection" width="55" />
         <el-table-column prop="id" label="模板Id" sortable="custom" />
@@ -47,8 +47,8 @@
         >
           <template #default="scope">
             <el-select
-              style="width: 200px"
               v-model="scope.row.emailAccountId"
+              style="width: 200px"
               value-key="id"
             >
               <el-option
@@ -68,7 +68,7 @@
           sortable="custom"
         />
         <el-table-column prop="userName" label="状态" sortable="custom">
-          <template v-slot="scope">
+          <template #default="scope">
             <el-switch
               v-model="scope.row.enabled"
               inline-prompt
@@ -81,7 +81,7 @@
         </el-table-column>
         <el-table-column prop="createTime" label="创建时间" sortable="custom" />
         <el-table-column :min-width="appStore.operateMinWith" label="操作">
-          <template v-slot="scope">
+          <template #default="scope">
             <RowOpts :row="scope.row" :val="scope.row.name" :perms="perms" />
           </template>
         </el-table-column>
@@ -96,18 +96,18 @@
   </div>
 </template>
 
-<script setup>
-  import { getAll } from '@/api/message/email/emailAccount'
+<script setup lang="ts">
+  import { getAll, type EmailAccount } from '@/api/message/email/emailAccount'
   import { del, edit, get, add } from '@/api/message/email/emailTemplate'
   import { reactive, ref } from 'vue'
   import formPanel from './module/formPanel.vue'
-  import DateRangePicker from '@/components/CRUD/DateRangePicker.vue'
+  import DateRangePicker from '@/components/Crud/DateRangePicker.vue'
   import { useCrud } from '@/components/Crud/UseCrud'
-  import CrudOpts from '@/components/CRUD/CrudOpts.vue'
-  import RowOpts from '@/components/CRUD/RowOpts.vue'
-  import SearchOpts from '@/components/CRUD/SearchOpts.vue'
+  import CrudOpts from '@/components/Crud/CrudOpts.vue'
+  import RowOpts from '@/components/Crud/RowOpts.vue'
+  import SearchOpts from '@/components/Crud/SearchOpts.vue'
   import { useAppStore } from '@/pinia'
-  import { getDict, showDictLabel } from '@/utils/dictionary'
+  import { getDict, showDictLabel, type DictOption } from '@/utils/dictionary'
   import { ElMessage, ElMessageBox } from 'element-plus'
 
   defineOptions({
@@ -130,8 +130,8 @@
   })
 
   // 状态
-  const statusTypeOption = ref([])
-  const emailAccountOption = ref([])
+  const statusTypeOption = ref<DictOption[]>([])
+  const emailAccountOption = ref<EmailAccount[]>([])
 
   const {
     data,
@@ -141,15 +141,21 @@
     pagination,
     onSortChange
   } = useCrud({
-    crudMethod: { list: get, del: del, add: add, edit: edit },
+    crudMethod: {
+      list: get,
+      del: del,
+      add: add,
+      edit: edit,
+      download: () => Promise.resolve()
+    },
     defaultForm: () => ({
       id: 0,
-      name: null,
-      bccEmailAddresses: null,
-      subject: null,
+      name: undefined,
+      bccEmailAddresses: undefined,
+      subject: undefined,
       body: '',
       enabled: true,
-      emailAccountId: null
+      emailAccountId: undefined
     }),
     searchInfo
   })
@@ -163,8 +169,8 @@
 
   init()
 
-  const loadingMap = reactive({})
-  const changeEnabled = async (row, val) => {
+  const loadingMap = reactive<Record<string | number, boolean>>({})
+  const changeEnabled = async (row: any, val: boolean) => {
     loadingMap[row.id] = true
     ElMessageBox.confirm(
       `你要将${row.name}的状态切换为【${val ? '启用' : '禁用'}】吗？`,

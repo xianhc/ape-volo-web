@@ -6,8 +6,8 @@
   </div>
 </template>
 
-<script setup>
-  import zhCn from 'element-plus/dist/locale/zh-cn.mjs'
+<script setup lang="ts">
+  import zhCn from 'element-plus/es/locale/lang/zh-cn'
   import { useAppStore } from '@/pinia'
   useAppStore()
   defineOptions({

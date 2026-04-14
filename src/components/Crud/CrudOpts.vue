@@ -19,14 +19,16 @@
           icon="delete"
           :disabled="!crud.multipleSelection.value.length"
           @click="crud.doBatchDelete"
-          >删除
+        >
+          删除
         </el-button>
         <el-button
           v-has-perm="props.perms.download"
           type="warning"
           icon="download"
           @click="crud.doExport"
-          >导出
+        >
+          导出
         </el-button>
         <slot name="right" />
       </span>
@@ -43,8 +45,8 @@
             <el-button
               :type="crud.searchToggle.value ? 'primary' : ''"
               circle
-              @click="toggleSearch"
               class="search-btn"
+              @click="toggleSearch"
             >
               <el-icon>
                 <Search />
@@ -66,7 +68,7 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
   import { inject } from 'vue'
   import { Refresh, Search } from '@element-plus/icons-vue'
 
@@ -79,7 +81,7 @@
     }
   })
 
-  const crud = inject('crud')
+  const crud = inject<any>('crud')
 
   const toggleSearch = () => {
     crud.searchToggle.value = !crud.searchToggle.value

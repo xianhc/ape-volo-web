@@ -3,7 +3,7 @@
     <div v-if="searchToggle" class="ape-volo-search">
       <el-form :inline="true" :model="searchInfo">
         <el-form-item label="操作人">
-          <el-input v-model="searchInfo.createBy" placeholder="请输入" />
+          <el-input v-model="searchInfo.controller" placeholder="请输入" />
         </el-form-item>
         <el-form-item label="请求方式">
           <el-select v-model="searchInfo.method" clearable placeholder="请选择">
@@ -26,10 +26,10 @@
     <div class="ape-volo-table">
       <el-table
         ref="tableRef"
-        :data="data"
         v-loading="loading"
-        @sort-change="onSortChange"
+        :data="data"
         row-key="id"
+        @sort-change="onSortChange"
       >
         <el-table-column prop="createBy" label="账号" sortable="custom" />
         <el-table-column prop="createTime" label="创建时间" sortable="custom" />
@@ -39,11 +39,11 @@
         <el-table-column prop="requestIp" label="Ip地址" sortable="custom" />
         <el-table-column prop="ipAddress" label="归属地" sortable="custom" />
         <el-table-column :min-width="appStore.operateMinWith" label="操作">
-          <template v-slot="scope">
+          <template #default="scope">
             <el-button
-              @click="showExceptionLogDetail(scope.row)"
               icon="view"
               type="text"
+              @click="showExceptionLogDetail(scope.row)"
             >
               详情
             </el-button>
@@ -126,14 +126,18 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
   import { get } from '@/api/log/exceptionLog'
+  import type {
+    ExceptionLog,
+    ExceptionLogQueryParams
+  } from '@/api/log/types/exceptionLog.types'
   import { ref } from 'vue'
-  import DateRangePicker from '@/components/CRUD/DateRangePicker.vue'
+  import DateRangePicker from '@/components/Crud/DateRangePicker.vue'
   import { useCrud } from '@/components/Crud/UseCrud'
-  import SearchOpts from '@/components/CRUD/SearchOpts.vue'
+  import SearchOpts from '@/components/Crud/SearchOpts.vue'
   import { useAppStore } from '@/pinia'
-  import { getDict } from '@/utils/dictionary'
+  import { getDict, type DictOption } from '@/utils/dictionary'
 
   defineOptions({
     name: 'ExceptionLog'
@@ -142,13 +146,18 @@
   const appStore = useAppStore()
 
   const exceptionDetailDrawer = ref(false)
-  const currentRow = ref({})
-  const tableRef = ref()
-  const searchInfo = ref({})
-  const httpMethodOption = ref([])
+  const currentRow = ref<ExceptionLog>({} as ExceptionLog)
+  const searchInfo = ref<ExceptionLogQueryParams>({})
+  const httpMethodOption = ref<DictOption[]>([])
 
   const { data, searchToggle, loading, pagination, onSortChange } = useCrud({
-    crudMethod: { list: get },
+    crudMethod: {
+      list: get,
+      add: () => Promise.resolve({} as any),
+      edit: () => Promise.resolve({} as any),
+      del: () => Promise.resolve({} as any),
+      download: () => Promise.resolve({} as any)
+    },
     defaultForm: () => ({}),
     searchInfo
   })
@@ -161,12 +170,12 @@
       console.error('获取 http_method 失败:', err)
     })
 
-  const showExceptionLogDetail = (row) => {
+  const showExceptionLogDetail = (row: any) => {
     exceptionDetailDrawer.value = true
     currentRow.value = { ...row }
   }
 
-  const formatJson = (value) => {
+  const formatJson = (value: any) => {
     if (!value) return ''
     try {
       const obj = typeof value === 'string' ? JSON.parse(value) : value

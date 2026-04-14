@@ -20,11 +20,11 @@
       <CrudOpts :perms="perms" />
       <el-table
         ref="tableRef"
-        :data="data"
         v-loading="loading"
+        :data="data"
+        row-key="id"
         @selection-change="onSelectionChange"
         @sort-change="onSortChange"
-        row-key="id"
       >
         <el-table-column type="selection" width="55" />
         <el-table-column prop="id" label="账号Id" sorttable="custom" />
@@ -39,7 +39,7 @@
         <el-table-column prop="userName" label="用户名称" sortable="custom" />
         <el-table-column prop="password" label="密码" />
         <el-table-column prop="enableSsl" label="Ssl" sortable="custom">
-          <template v-slot="scope">
+          <template #default="scope">
             <el-switch v-model="scope.row.enableSsl" :disabled="true" />
           </template>
         </el-table-column>
@@ -48,7 +48,7 @@
           label="系统凭据"
           sortable="custom"
         >
-          <template v-slot="scope">
+          <template #default="scope">
             <el-switch
               v-model="scope.row.useDefaultCredentials"
               :disabled="true"
@@ -57,7 +57,7 @@
         </el-table-column>
         <el-table-column prop="createTime" label="创建时间" sortable="custom" />
         <el-table-column :min-width="appStore.operateMinWith" label="操作">
-          <template v-slot="scope">
+          <template #default="scope">
             <RowOpts :row="scope.row" :val="scope.row.name" :perms="perms" />
           </template>
         </el-table-column>
@@ -69,15 +69,15 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
   import { del, edit, get, add } from '@/api/message/email/emailAccount'
   import { ref } from 'vue'
   import formPanel from './module/formPanel.vue'
-  import DateRangePicker from '@/components/CRUD/DateRangePicker.vue'
+  import DateRangePicker from '@/components/Crud/DateRangePicker.vue'
   import { useCrud } from '@/components/Crud/UseCrud'
-  import CrudOpts from '@/components/CRUD/CrudOpts.vue'
-  import RowOpts from '@/components/CRUD/RowOpts.vue'
-  import SearchOpts from '@/components/CRUD/SearchOpts.vue'
+  import CrudOpts from '@/components/Crud/CrudOpts.vue'
+  import RowOpts from '@/components/Crud/RowOpts.vue'
+  import SearchOpts from '@/components/Crud/SearchOpts.vue'
   import { useAppStore } from '@/pinia'
 
   defineOptions({
@@ -107,15 +107,21 @@
     pagination,
     onSortChange
   } = useCrud({
-    crudMethod: { list: get, del: del, add: add, edit: edit },
+    crudMethod: {
+      list: get,
+      del: del,
+      add: add,
+      edit: edit,
+      download: () => Promise.resolve({} as any)
+    },
     defaultForm: () => ({
       id: 0,
-      email: null,
-      displayName: null,
-      host: null,
-      port: null,
-      userName: null,
-      password: null,
+      email: undefined,
+      displayName: undefined,
+      host: undefined,
+      port: undefined,
+      userName: undefined,
+      password: undefined,
       enableSsl: false,
       useDefaultCredentials: false
     }),

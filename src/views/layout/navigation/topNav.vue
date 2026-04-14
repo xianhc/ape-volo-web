@@ -35,7 +35,7 @@
   const { device } = storeToRefs(appStore)
 
   defineOptions({
-    name: 'HeadMode'
+    name: 'TopNav'
   })
   const route = useRoute()
   const router = useRouter()

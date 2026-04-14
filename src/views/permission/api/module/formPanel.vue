@@ -10,9 +10,9 @@
         <span class="text-lg">{{ getFormTitle() }}</span>
         <div>
           <el-button @click="closeDialog">取 消</el-button>
-          <el-button type="primary" :loading="loading" @click="handleSave"
-            >确 定</el-button
-          >
+          <el-button type="primary" :loading="loading" @click="handleSave">
+            确 定
+          </el-button>
         </div>
       </div>
     </template>
@@ -22,9 +22,9 @@
         <el-select v-model="form.group" placeholder="Api分组" clearable>
           <el-option
             v-for="item in props.apiGroupOption"
-            :key="item"
-            :label="item"
-            :value="item"
+            :key="item.group"
+            :label="item.group"
+            :value="item.group"
           />
         </el-select>
       </el-form-item>
@@ -47,25 +47,21 @@
     </el-form>
   </el-drawer>
 </template>
-<script setup>
+<script setup lang="ts">
   import { useAppStore } from '@/pinia'
   import { ref, inject } from 'vue'
+  import type { DictOption } from '@/utils/dictionary'
+  import type { ApiGroup } from '@/api/permission/api'
 
   const appStore = useAppStore()
 
-  const props = defineProps({
-    httpMethodOption: {
-      type: Array,
-      required: true
-    },
-    apiGroupOption: {
-      type: Array,
-      required: true
-    }
-  })
+  const props = defineProps<{
+    httpMethodOption: DictOption[]
+    apiGroupOption: ApiGroup[]
+  }>()
 
   // 注入crud
-  const crud = inject('crud')
+  const crud = inject<any>('crud')
   const {
     form,
     dialogVisible,

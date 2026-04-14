@@ -46,7 +46,7 @@
   const { device, config } = storeToRefs(appStore)
 
   defineOptions({
-    name: 'NormalMode'
+    name: 'SidebarNav'
   })
   const route = useRoute()
   const router = useRouter()

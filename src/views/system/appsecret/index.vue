@@ -4,8 +4,8 @@
       <el-form :inline="true" :model="searchInfo">
         <el-form-item label="应用Id">
           <el-input
-            oninput="value=value.replace(/[^0-9]/g,'')"
             v-model="searchInfo.appId"
+            oninput="value = value.replace(/[^0-9]/g, '')"
             placeholder="请输入"
           />
         </el-form-item>
@@ -24,11 +24,11 @@
       <CrudOpts :perms="perms" />
       <el-table
         ref="tableRef"
-        :data="data"
         v-loading="loading"
+        :data="data"
+        row-key="id"
         @selection-change="onSelectionChange"
         @sort-change="onSortChange"
-        row-key="id"
       >
         <el-table-column type="selection" width="55" />
         <el-table-column prop="appId" label="应用Id" sortable="custom" />
@@ -42,7 +42,7 @@
         <el-table-column prop="createTime" label="创建时间" sortable="custom" />
         <el-table-column prop="createBy" label="创建人" sortable="custom" />
         <el-table-column :min-width="appStore.operateMinWith" label="操作">
-          <template v-slot="scope">
+          <template #default="scope">
             <RowOpts :row="scope.row" :val="scope.row.name" :perms="perms" />
           </template>
         </el-table-column>
@@ -54,15 +54,16 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
   import { del, edit, get, add, download } from '@/api/system/appSecret'
+  import type { AppSecretQueryParams } from '@/api/system/types/appSecret.types'
   import { ref } from 'vue'
   import formPanel from './module/formPanel.vue'
-  import DateRangePicker from '@/components/CRUD/DateRangePicker.vue'
+  import DateRangePicker from '@/components/Crud/DateRangePicker.vue'
   import { useCrud } from '@/components/Crud/UseCrud'
-  import CrudOpts from '@/components/CRUD/CrudOpts.vue'
-  import RowOpts from '@/components/CRUD/RowOpts.vue'
-  import SearchOpts from '@/components/CRUD/SearchOpts.vue'
+  import CrudOpts from '@/components/Crud/CrudOpts.vue'
+  import RowOpts from '@/components/Crud/RowOpts.vue'
+  import SearchOpts from '@/components/Crud/SearchOpts.vue'
   import { useAppStore } from '@/pinia'
 
   defineOptions({
@@ -78,7 +79,7 @@
 
   const appStore = useAppStore()
 
-  const searchInfo = ref({})
+  const searchInfo = ref<AppSecretQueryParams>({})
 
   const {
     data,

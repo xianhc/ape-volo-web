@@ -28,29 +28,24 @@
       <CrudOpts :perms="perms" />
       <el-table
         ref="tableRef"
-        :data="data"
         v-loading="loading"
+        :data="data"
+        row-key="id"
         @selection-change="onSelectionChange"
         @sort-change="onSortChange"
-        row-key="id"
       >
         <el-table-column type="selection" width="55" />
         <el-table-column prop="name" label="租户编号" sortable="custom" />
         <el-table-column prop="name" label="租户名称" sortable="custom" />
         <el-table-column
           prop="tenantType"
-          :formatter="
-            (row, column, cellValue) =>
-              showDictLabel(tenantTypeOption, cellValue)
-          "
+          :formatter="tenantTypeFormatter"
           label="租户类型"
           sortable="custom"
         />
         <el-table-column
           prop="dbType"
-          :formatter="
-            (row, column, cellValue) => showDictLabel(dbTypeOption, cellValue)
-          "
+          :formatter="dbTypeFormatter"
           label="库类型"
           sortable="custom"
         />
@@ -59,7 +54,7 @@
         <el-table-column prop="description" label="描述" />
         <el-table-column prop="createTime" label="创建时间" sortable="custom" />
         <el-table-column :min-width="appStore.operateMinWith" label="操作">
-          <template v-slot="scope">
+          <template #default="scope">
             <RowOpts :row="scope.row" :val="scope.row.name" :perms="perms" />
           </template>
         </el-table-column>
@@ -74,16 +69,17 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
   import { del, edit, get, add, download } from '@/api/system/tenant'
+  import type { TenantQueryParams } from '@/api/system/types/tenant.types'
   import { ref } from 'vue'
   import formPanel from './module/formPanel.vue'
-  import DateRangePicker from '@/components/CRUD/DateRangePicker.vue'
-  import { getDict, showDictLabel } from '@/utils/dictionary'
+  import DateRangePicker from '@/components/Crud/DateRangePicker.vue'
+  import { getDict, showDictLabel, type DictOption } from '@/utils/dictionary'
   import { useCrud } from '@/components/Crud/UseCrud'
-  import CrudOpts from '@/components/CRUD/CrudOpts.vue'
-  import RowOpts from '@/components/CRUD/RowOpts.vue'
-  import SearchOpts from '@/components/CRUD/SearchOpts.vue'
+  import CrudOpts from '@/components/Crud/CrudOpts.vue'
+  import RowOpts from '@/components/Crud/RowOpts.vue'
+  import SearchOpts from '@/components/Crud/SearchOpts.vue'
   import { useAppStore } from '@/pinia'
 
   defineOptions({
@@ -99,12 +95,25 @@
 
   const appStore = useAppStore()
 
-  const searchInfo = ref({})
+  const searchInfo = ref<TenantQueryParams>({})
 
+  // 状态
+  const statusTypeOption = ref<DictOption[]>([])
   // 租户类型
-  const tenantTypeOption = ref([])
-  // 租户类型
-  const dbTypeOption = ref([])
+  const tenantTypeOption = ref<DictOption[]>([])
+  // 数据库类型
+  const dbTypeOption = ref<DictOption[]>([])
+
+  // 租户类型 formatter
+  const tenantTypeFormatter = (_row: any, _column: any, cellValue: any) => {
+    return showDictLabel(tenantTypeOption.value, cellValue)
+  }
+
+  // 数据库类型 formatter
+  const dbTypeFormatter = (_row: any, _column: any, cellValue: any) => {
+    return showDictLabel(dbTypeOption.value, cellValue)
+  }
+
   const {
     data,
     searchToggle,
@@ -122,18 +131,19 @@
     },
     defaultForm: () => ({
       id: 0,
-      tenantId: null,
-      name: null,
-      description: null,
-      tenantType: null,
-      dbType: null,
-      configId: null,
-      connectionString: null
+      tenantId: undefined,
+      name: '',
+      description: undefined,
+      tenantType: undefined,
+      dbType: undefined,
+      configId: undefined,
+      connectionString: undefined
     }),
     searchInfo
   })
 
   const init = async () => {
+    statusTypeOption.value = await getDict('status_type')
     tenantTypeOption.value = await getDict('tenant_type')
     dbTypeOption.value = await getDict('db_type')
   }
