@@ -94,9 +94,9 @@ export const download = (
 
 /**
  * 获取API分组信息
- * @returns {Promise<AxiosResponse<ApiGroup[]>>} 返回API分组的Promise对象
+ * @returns {Promise<AxiosResponse<string[]>>} 返回API分组的Promise对象
  */
-export const group = (): Promise<AxiosResponse<ApiGroup[]>> => {
+export const group = (): Promise<AxiosResponse<string[]>> => {
   return request({
     url: '/apis/group',
     method: 'GET'

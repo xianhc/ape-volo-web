@@ -175,9 +175,9 @@
     useCrud({
       crudMethod: {
         list: get,
-        add: () => Promise.resolve(),
-        edit: () => Promise.resolve(),
-        del: () => Promise.resolve(),
+        add: () => Promise.resolve({} as any),
+        edit: () => Promise.resolve({} as any),
+        del: () => Promise.resolve({} as any),
         download: download
       },
       defaultForm: () => ({}),

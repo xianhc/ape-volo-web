@@ -169,7 +169,6 @@ export function editPreferencesConfig(
   return request({
     url: '/user/update/preferencesConfig',
     method: 'put',
-    donNotShowLoading: true,
     data: { preferencesConfig }
   })
 }

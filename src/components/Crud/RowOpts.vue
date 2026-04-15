@@ -40,22 +40,36 @@
 
 <script setup lang="ts">
   import { inject, ref } from 'vue'
+  import type { PropType } from 'vue'
+  import type { CrudInstance } from '@/components/Crud/UseCrud'
+
+  interface RowData {
+    id: number
+    [key: string]: any
+  }
+
+  interface RowPerms {
+    edit?: string | string[]
+    del?: string | string[]
+    [key: string]: any
+  }
 
   const pop = ref(false)
 
   // 注入crud
-  const crud = inject('crud')
+  const crud = inject<CrudInstance<RowData>>('crud')
+  if (!crud) {
+    throw new Error('crud not provided')
+  }
   const { doDelete } = crud
 
   const props = defineProps({
     perms: {
-      type: Object,
-      default: () => {
-        return {}
-      }
+      type: Object as PropType<RowPerms>,
+      default: () => ({})
     },
     row: {
-      type: Object,
+      type: Object as PropType<RowData>,
       required: true
     },
     disabledEdit: {

@@ -2,6 +2,7 @@ import { single } from '@/api/system/dictionary'
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import type { Ref } from 'vue'
+import type { DictionaryDetail } from '@/api/system/types/dictionaryDetail.types'
 
 /**
  * 字典项接口
@@ -58,7 +59,7 @@ export const useDictionaryStore = defineStore('dictionary', () => {
       const dict: DictionaryItem[] = []
       // 处理字典详情数据
       res.data.dictDetails &&
-        res.data.dictDetails.forEach((item: any) => {
+        res.data.dictDetails.forEach((item: DictionaryDetail) => {
           dict.push({
             label: item.label,
             value: item.value

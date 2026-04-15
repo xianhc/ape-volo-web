@@ -1,6 +1,6 @@
 {
   "name": "ape-volo-admin",
-  "version": "3.5.1",
+  "version": "3.5.2",
   "private": true,
   "scripts": {
     "dev": "tsx openWebsite.ts && vite --host --mode development",

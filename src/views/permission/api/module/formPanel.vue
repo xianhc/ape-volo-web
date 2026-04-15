@@ -22,9 +22,9 @@
         <el-select v-model="form.group" placeholder="Api分组" clearable>
           <el-option
             v-for="item in props.apiGroupOption"
-            :key="item.group"
-            :label="item.group"
-            :value="item.group"
+            :key="item"
+            :label="item"
+            :value="item"
           />
         </el-select>
       </el-form-item>
@@ -51,13 +51,12 @@
   import { useAppStore } from '@/pinia'
   import { ref, inject } from 'vue'
   import type { DictOption } from '@/utils/dictionary'
-  import type { ApiGroup } from '@/api/permission/api'
 
   const appStore = useAppStore()
 
   const props = defineProps<{
     httpMethodOption: DictOption[]
-    apiGroupOption: ApiGroup[]
+    apiGroupOption: string[]
   }>()
 
   // 注入crud

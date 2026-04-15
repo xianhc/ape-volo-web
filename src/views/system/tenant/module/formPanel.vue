@@ -10,9 +10,9 @@
         <span class="text-lg">{{ getFormTitle() }}</span>
         <div>
           <el-button @click="closeDialog">取消</el-button>
-          <el-button type="primary" :loading="loading" @click="handleSave"
-            >保存</el-button
-          >
+          <el-button type="primary" :loading="loading" @click="handleSave">
+            保存
+          </el-button>
         </div>
       </div>
     </template>
@@ -29,8 +29,8 @@
     >
       <el-form-item label="租户类型" class="col-span-2" prop="tenantType">
         <el-select
-          style="width: 100%"
           v-model="form.tenantType"
+          style="width: 100%"
           placeholder="请选择"
         >
           <el-option
@@ -44,17 +44,17 @@
       <el-form-item label="租户编号" prop="tenantId">
         <el-input
           v-model="form.tenantId"
-          oninput="value=value.replace(/[^0-9]/g,'')"
+          oninput="value = value.replace(/[^0-9]/g, '')"
           placeholder="请输入"
         />
       </el-form-item>
       <el-form-item label="租户名称" prop="name">
         <el-input v-model="form.name" placeholder="请输入" />
       </el-form-item>
-      <el-form-item label="DB类型" prop="dbType" v-if="form.tenantType === 2">
+      <el-form-item v-if="form.tenantType === 2" label="DB类型" prop="dbType">
         <el-select
-          style="width: 260px"
           v-model="form.dbType"
+          style="width: 260px"
           placeholder="请选择"
         >
           <el-option
@@ -65,7 +65,7 @@
           />
         </el-select>
       </el-form-item>
-      <el-form-item prop="configId" v-if="form.tenantType === 2">
+      <el-form-item v-if="form.tenantType === 2" prop="configId">
         <template #label>
           <div>
             <span>数据库标识</span>
@@ -83,10 +83,10 @@
         <el-input v-model="form.configId" placeholder="请输入" />
       </el-form-item>
       <el-form-item
+        v-if="form.tenantType === 2 && form.dbType !== 2"
         label="数据库链接"
         prop="connectionString"
         class="col-span-2"
-        v-if="form.tenantType === 2 && form.dbType !== 2"
       >
         <el-input v-model="form.connectionString" placeholder="请输入" />
       </el-form-item>
@@ -105,19 +105,14 @@
   import { ref, inject } from 'vue'
   import { useAppStore } from '@/pinia'
   import { QuestionFilled } from '@element-plus/icons-vue'
+  import type { DictOption } from '@/utils/dictionary'
 
   const appStore = useAppStore()
 
-  const props = defineProps({
-    tenantTypeOption: {
-      type: Array,
-      required: true
-    },
-    dbTypeOption: {
-      type: Array,
-      required: true
-    }
-  })
+  const props = defineProps<{
+    tenantTypeOption: DictOption[]
+    dbTypeOption: DictOption[]
+  }>()
 
   // 注入crud
   const crud = inject<any>('crud')

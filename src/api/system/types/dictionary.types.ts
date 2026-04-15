@@ -3,6 +3,7 @@ import type {
   BasePageResponse,
   BaseEntity
 } from '../../types/base'
+import type { DictionaryDetail } from './dictionaryDetail.types'
 
 /**
  * 字典实体接口
@@ -12,6 +13,8 @@ export interface Dictionary extends BaseEntity {
   name: string
   /** 字典描述 */
   description?: string
+  /** 字典详情列表 */
+  dictDetails?: DictionaryDetail[]
 }
 
 /**

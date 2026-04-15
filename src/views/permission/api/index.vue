@@ -93,8 +93,7 @@
     edit,
     download,
     group,
-    refresh as refreshApi,
-    type ApiGroup
+    refresh as refreshApi
   } from '@/api/permission/api'
   import type { ApiQueryParams } from '@/api/permission/types/api.types'
   import formPanel from './module/formPanel.vue'
@@ -118,7 +117,7 @@
   const appStore = useAppStore()
 
   const httpMethodOption = ref<DictOption[]>([])
-  const apiGroupOption = ref<ApiGroup[]>([])
+  const apiGroupOption = ref<string[]>([])
 
   const searchInfo = ref<ApiQueryParams>({})
 
